@@ -1,0 +1,25 @@
+.answers-tf-container {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+    align-items: center;
+    justify-content: center;
+}
+
+.answer-option-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    background-color: rgb(46, 46, 46);
+    border-radius: 8px;
+    box-shadow: rgba(3, 3, 3, 0.16) 0px 2px 8px, rgb(84, 84, 84) 0px 1px 1px inset;
+}
+
+
+
+

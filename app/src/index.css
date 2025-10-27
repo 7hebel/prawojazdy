@@ -1,0 +1,9 @@
+:root {
+  --h-shift: 270;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: hsl(var(--h-shift), 3%, 12%);
+}
