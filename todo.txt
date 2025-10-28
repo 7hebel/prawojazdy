@@ -1,0 +1,3 @@
+testy w playwrighcie
+3 logi, 3 metryki, 3 trace'y  --  zastosowania LGTM 
+screeny z przykładów

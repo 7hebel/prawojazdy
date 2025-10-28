@@ -1,54 +1,68 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import './Ui.css';
 
 
-// Answer: radio select -- Tak/Nie/abc
-// ui:
-// ButtonPrimary
-// ButtonSecondary
-// ButtonTertiary
-
-
-// testy w playwrighcie
-// 3 logi, 3 metryki, 3 trace'y  --  zastosowania LGTM 
-// screeny z przykładów
-
-function _AnswerOptionTF({answerType: answerValue, keyboardShortcut, isSelected, selectSetter}) {
-  if (answerValue !== "T" && answerValue !== "F") {
-    throw new Error(`_AnswerOptionTF::answerType must be either 'T' or 'F', not '${answerValue}'`)
-  }
-
-  function onSelect() {
-    selectSetter(answerValue)
-  }
-
-  const text = (answerValue == "T")? "Prawda" : "Fałsz";
-
+function _DepthButtonBase({ text, onClick, className, ...attrs }) {
   return (
-    <div 
-      className='answer-option-container'
-      isSelected={Number(isSelected)}
-      onClick={onSelect}
-      >
-        {text}
-    </div>
+    <button
+      className={"ui-btn-depth " + className}
+      onClick={onClick}
+      {...attrs}
+    >
+      {text}
+    </button>
+  )
+}
+
+function _AnswerOptionTN({ answerValue, isSelected, selectSetter }) {
+  const text = (answerValue == "T")? "Tak" : "Nie";
+  return (
+    <_DepthButtonBase
+      text={text}
+      onClick={() => { selectSetter(answerValue) }}
+      className={'answer-option ' + (isSelected? 'selected-answer' : '')}
+    ></_DepthButtonBase>
   )
 
 }
 
-export function AnswersTF({ questionID }) {
+export function AnswersTN({ questionID }) {
   const [selected, setSelected] = useState("");
 
   return (
     <div 
-      className='answers-tf-container'
+      className='answers-tn-container'
       id={'answer-' + questionID}
-      answer={selected}
-      >
-
-        <_AnswerOptionTF answerType={'T'}/>
-        <_AnswerOptionTF answerType={'F'}/>
-
+      answer={selected}>
+        <_AnswerOptionTN answerValue='T' isSelected={selected=='T'} selectSetter={setSelected}/>
+        <_AnswerOptionTN answerValue='N' isSelected={selected=='N'} selectSetter={setSelected}/>
     </div>
   )
 }
+
+function _AnswerOptionABC({ answerValue, answerContent, isSelected, selectSetter }) {
+  return (
+    <div className={'abc-answer-group ' + (isSelected? "selected-abc-answer" : "") } onClick={() => {selectSetter(answerValue)}}>
+      <div className='abc-answer-value'>{answerValue}</div>
+      <div className='abc-answer-content'>{answerContent}</div>
+    </div>
+  )
+}
+
+export function AnswersABC({ questionID, answers }) {
+  const [selected, setSelected] = useState("");
+
+  return (
+    <div
+      className='answers-abc-container'
+      id={'answer-' + questionID}
+      answer={selected}
+    >
+      <_AnswerOptionABC answerValue='A' answerContent={answers['A']} isSelected={selected=='A'} selectSetter={setSelected} />
+      <_AnswerOptionABC answerValue='B' answerContent={answers['B']} isSelected={selected=='B'} selectSetter={setSelected} />
+      <_AnswerOptionABC answerValue='C' answerContent={answers['C']} isSelected={selected=='C'} selectSetter={setSelected} />
+    </div>
+  )
+
+}
+
