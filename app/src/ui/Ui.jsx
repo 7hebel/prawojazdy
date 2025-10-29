@@ -96,7 +96,7 @@ export function ButtonTimer({ text, seconds, onClick, ref, seqnum }) {
   };
 
   return (
-    <div className='button-timer-container' onClick={handleClick} ref={ref} seqnum={seqnum} >
+    <div className='button-timer-container' onClick={handleClick} ref={ref} seqnum={seqnum}>
       <span>{text}</span>
       <span className='button-timer-s'>{remaining}s</span>
       <div className='button-timer-passed' style={{ width: (timer / seconds) * 100 + "%" }}></div>
@@ -104,15 +104,18 @@ export function ButtonTimer({ text, seconds, onClick, ref, seqnum }) {
   )
 }
 
-export function ButtonTimerSequence({ sequence, ref }) {
-  const [seqEl, setSeqEl] = useState(0);
-  
-  const current = sequence[seqEl];
-  const onSeqClick = () => {
-    if (seqEl < sequence.length - 1) setSeqEl(e => e + 1);
-    if (current.onClick) current.onClick();
-  }
-  
-  return <ButtonTimer seqnum={seqEl} ref={ref} key={seqEl} text={current.text} seconds={current.seconds} onClick={onSeqClick}></ButtonTimer>
+export function ButtonTimerSequence({ sequence, ref, index }) {
+  const current = sequence[index];
+  return <ButtonTimer seqnum={index} ref={ref} key={index} text={current.text} seconds={current.seconds} onClick={current.onClick}></ButtonTimer>
+}
+
+
+
+export function PrimaryActionButton({ text, onClick, ref }) {
+  return <_DepthButtonBase ref={ref} className={'action-button'} text={text} onClick={onClick}></_DepthButtonBase>
+}
+
+export function SecondaryActionButton({ text, onClick, ref }) {
+  return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} text={text} onClick={onClick}></_DepthButtonBase>
 }
 

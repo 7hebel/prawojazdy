@@ -1,4 +1,4 @@
-import { AnswersTN, AnswersABC, ButtonTimer, ButtonTimerSequence } from './Ui';
+import { AnswersTN, AnswersABC, ButtonTimer, ButtonTimerSequence, PrimaryActionButton, SecondaryActionButton } from './Ui';
 import './UiTest.css';
 
 export default function UiTest() {
@@ -32,6 +32,14 @@ export default function UiTest() {
             {text: "Sequence element 3", seconds: 5, onClick: () => {console.log("Sequence element 3")}}
           ]}
         />
+      </div>
+
+      <div className='spacer'></div>
+
+      <h1>Other buttons:</h1>
+      <div className='row'>
+        <PrimaryActionButton text="Primary action"/>
+        <SecondaryActionButton text="Secondary action"/>
       </div>
     </main>
   )

@@ -49,7 +49,6 @@
     height: 100%;
 }
 
-
 .media-container {
     position: relative;
 }
@@ -78,6 +77,8 @@
     font-size: 20px;
     color: white;
     cursor: pointer;
+    opacity: 1;
+    transition: opacity .5s;
 }
 
 .question-content {
@@ -115,9 +116,8 @@
 .metadata-row {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 4px 12px;
+    gap: 4px 8px;
     font-family: var(--font-ui);
     color: hsl(var(--h-shift), 13%, 81%);
     font-size: 14px;
@@ -134,6 +134,7 @@
 .important-text {
     color: white;
     font-weight: 500;
+    margin-left: 4px;
 }
 
 @media only screen and (max-width: 1000px) {
@@ -152,4 +153,3 @@
     }
 
 }
-
