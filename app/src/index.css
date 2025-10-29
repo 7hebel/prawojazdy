@@ -6,10 +6,11 @@
   --font-text: 'Quicksand';
 
   --c-primary: hsl(var(--h-shift), 15%, 43%);
+
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: hsl(var(--h-shift), 9%, 16%);
+  background-color: hsl(var(--h-shift), 11%, 14%);
 }

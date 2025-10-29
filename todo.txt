@@ -1,3 +1,10 @@
 testy w playwrighcie
 3 logi, 3 metryki, 3 trace'y  --  zastosowania LGTM 
 screeny z przykładów
+
+Don't require account, accept anon, save anon data in localstorage (persistant storage?)
+
+WS server for question/answer dialogue
+In ws connection, cache answers to questions, don't return them in response????
+
+

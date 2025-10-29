@@ -11,7 +11,8 @@
 .answers-abc-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
+    width: 100%;
 }
 
 .ui-btn-depth  {
@@ -61,6 +62,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color .1s, outline .1s;
+    width: 100%;
 }
 
 .abc-answer-value {
