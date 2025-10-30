@@ -1,12 +1,13 @@
 from supabase import create_client, Client
 import postgrest
 import random
+import uuid
 import os
 
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
-TOTAL_QUESTIONS = 2068
+TOTAL_QUESTIONS = 2016
 
 
 def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
@@ -19,7 +20,7 @@ def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
 
 def __parse_answers(question_data: dict) -> dict:
     """ Turn answer_a, answer_b, ... to: "answers": "TN"/{"A": "...", "B": "..."} """
-    if len(question_data["correct_answer"]) > 1: # Tak/Nie
+    if not question_data["answer_a"]: # Tak/Nie
         question_data["answers"] = "TN"
     else: # ABC
         question_data["answers"] = {
@@ -43,4 +44,17 @@ def fetch_random_question() -> dict:
     question_row = response.model_dump()["data"][0]
     return __parse_answers(question_row)
 
+
+def create_anonymous_client() -> str:
+    client_id = uuid.uuid4().hex
+    supabase.table("Clients").insert({
+        "client_id": client_id,
+        "is_anon": True,
+        "practice_seed": random.randint(1, 2_147_483_647) # int4 max
+    })
+
+    return client_id
+
+def get_client(client_id: str) -> dict:
+    return supabase.table("Clients").select("*").eq("client_id", client_id)
 

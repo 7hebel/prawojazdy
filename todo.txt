@@ -6,5 +6,27 @@ Don't require account, accept anon, save anon data in localstorage (persistant s
 
 WS server for question/answer dialogue
 In ws connection, cache answers to questions, don't return them in response????
+Questions load-ahead
+
+
+on first connection to server: server creates CLIENT-ID
+Create entry in database, create and save seed to shuffle question indexes.
+client saves their ID to localstorage.
+On next connection, connect to /ws/practice/{CLIENT-ID}
+The session can be continued.
+
+
+
+DB.Clients:
+client_id --> uuid4
+created_at --> datetime
+is_anon --> bool, if user has created account, or its just anon-session
+email --> text|null             }
+name --> text|null               } --> null for anons
+password --> text(bcrypt)|null  }
+practice_seed --> int, used for shuffling indexes for practice
+practice_index --> int, current practice question
+practice_hard_questions --> list[int], if user answers incorrectly, append question index to this list. When in practice session, randomly insert questions from this list until user answers correctly
+practice_saved_questions --> list[int], user can bookmark questions, append them to this list
 
 

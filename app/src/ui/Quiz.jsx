@@ -3,10 +3,8 @@ import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton } from 
 import './Quiz.css'
 
 
-export function Quiz({ questionData, isExamMode }) {
-  // questionData = { "question": "Jaką decyzję podejmie starosta, jeśli zostałeś zatrzymany do kontroli kierując pojazdem pomimo przedłużeniu okresu zatrzymania prawa jazdy do sześciu miesięcy za przekroczenie prędkości o więcej niż 50 km/h w obszarze  zabudowanym?", "correct_answer": "C", "media_name": "", "index": 1872, "answers": { "A": "Przedłuży okres zatrzymania o kolejne trzy miesiące.", "B": "Przedłuży okres zatrzymania o kolejne cztery miesiące.", "C": "Cofnie uprawnienie do kierowania pojazdem." }, "points": 2, "category": "SPECJALISTYCZNY" }
-  questionData = { "question": "Czy w tej sytuacji masz prawo kilkukrotnie użyć sygnału dźwiękowego, zamiast zatrzymać pojazd?", "correct_answer": "Nie", "media_name": "532.D28KW_org.mp4", "index": 459, "answers": "TN", "points": 1, "category": "PODSTAWOWY" }
-  // isExamMode=true;
+export function Quiz({ questionData, isExamMode, onContinue }) {
+  if (questionData == null) { return <h1>no data</h1> }
 
   const mediaType = (
     questionData.media_name.endsWith(".mp4") ? "VIDEO" :
@@ -21,11 +19,11 @@ export function Quiz({ questionData, isExamMode }) {
     if (questionData.category == "PODSTAWOWY") {
       actionButtonsSequence = [
         { text: "Start", seconds: 20, onClick: () => { startBasicQuestion() }},
-        { text: "Dalej", seconds: 15, onClick: () => {} },
+        { text: "Dalej", seconds: 15, onClick: () => { onContinue() } },
       ]
     } else {
       actionButtonsSequence = [
-        { text: "Dalej", seconds: 50, onClick: () => {} },
+        { text: "Dalej", seconds: 50, onClick: () => { onContinue() } },
       ]
     }
   }
@@ -40,6 +38,7 @@ export function Quiz({ questionData, isExamMode }) {
   }
 
   function mediaBlurAsPlayBtn() {
+    if (!mediablur.current) return;
     mediablur.current.textContent = "Rozpocznij odtwarzanie...";
     mediablur.current.removeEventListener('click', startBasicQuestion);
     mediablur.current.addEventListener('click', () => {
@@ -50,10 +49,19 @@ export function Quiz({ questionData, isExamMode }) {
 
   useEffect(() => {
     if (!isExamMode) {
-      if (navigator.getAutoplayPolicy("mediaelement") === "disallowed") {
-        mediaBlurAsPlayBtn();
-      } else {
-        unblurMedia();
+      if (typeof navigator.getAutoplayPolicy === 'function') { // Firefox
+        if (navigator.getAutoplayPolicy("mediaelement") === "disallowed") {
+          mediaBlurAsPlayBtn();
+        } else {
+          unblurMedia();
+        }
+      } else { // Chrome
+        try {
+          mediaelement.current.play();
+          unblurMedia();
+        } catch {
+          mediaBlurAsPlayBtn();
+        }
       }
       mediaelement.current.addEventListener("click", () => { mediaelement.current.play(); })
     } 
@@ -106,15 +114,15 @@ export function Quiz({ questionData, isExamMode }) {
           </div>
           <div className="quiz-panel actions-panel">
             <div className="metadata-row">
-              <span>Zestaw: <span className="important-text">{questionData.category.toLowerCase()}</span></span>
               <span>Tryb: <span className="important-text">{(isExamMode) ? 'egzamin' : 'nauka'}</span></span>
+              <span>Zestaw: <span className="important-text">{questionData.category.toLowerCase()}</span></span>
               <span>Waga: <span className="important-text">{questionData.points}pkt.</span></span>
             </div>
             {
               isExamMode? 
                 <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
               :
-                <PrimaryActionButton ref={actionbtn} text="Dalej"></PrimaryActionButton>
+                <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={onContinue}></PrimaryActionButton>
             }
           </div>
         </div>
@@ -133,4 +141,37 @@ export function Quiz({ questionData, isExamMode }) {
   )
 }
 
+
+export function PracticeQuizLoop() {
+  const [questionData, setQuestionData] = useState(null);
+  const [WSConn, setWSConn] = useState(null);
+
+  useEffect(() => {
+    const ws = new WebSocket(import.meta.env.VITE_API + "ws/practice");
+    
+    ws.onmessage = (ev) => {
+      console.log(ev)
+      const { event, content } = JSON.parse(ev.data);
+
+      if (event == "QUESTION_DATA") {
+        setQuestionData(content)
+      }
+    }
+
+    ws.onopen = (ev) => {
+      console.log("OPEN")
+      ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+    }
+
+
+    setWSConn(ws);
+  }, [])
+
+  // take answer as param, check with ws
+  async function nextQuestion() {
+    await WSConn.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+  }
+
+  return <Quiz key={questionData?.index} questionData={questionData} isExamMode={false} onContinue={nextQuestion}></Quiz>
+}
 

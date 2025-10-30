@@ -1,19 +1,17 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Response, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
 import uvicorn
 import dotenv
-import os
 
 dotenv.load_dotenv(".env")
 
 from modules import observability
+from modules import connection
 from modules import database
 
 
 api = FastAPI()
-api.mount('/media/', StaticFiles(directory="../media/"), name="media")
 api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,14 +21,21 @@ api.add_middleware(
 )
 
 
+@api.get("/media/{media_name}")
+async def static_media(media_name: str) -> Response:
+    with open("../media/" + media_name, "rb") as file:
+        return Response(file.read(), media_type="video/mp4")
+
 @api.get("/")
-async def home() -> Response:
+async def get_home() -> Response:
     return Response("200")
 
-@api.get("/q/random")
-async def question_random() -> JSONResponse:
-    return database.fetch_random_question()
-
+@api.websocket("/ws/practice")
+async def ws_practice(ws_client: WebSocket) -> None:
+    await ws_client.accept()
+    await connection.WSQuizSessionHandler(ws_client).receive()
+        
+        
 if __name__ == "__main__":
     uvicorn.run(api)
 

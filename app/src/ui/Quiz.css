@@ -21,11 +21,11 @@
     border-radius: 6px;
     border: 2px solid #5f5f5f29;
     padding: 8px;
+    position: relative;
 }
 
 .media-panel {
     max-width: 80%;
-    max-height: 50dvh;
 }
 
 .actions-panel {
@@ -138,6 +138,23 @@
 }
 
 @media only screen and (max-width: 1000px) {
+    .quiz-container {
+        padding: 8px !important;
+    }
+    
+    .answers-panel {
+        margin-top: 12px;
+    }
+
+    #display-media {
+        max-height: 45dvh;
+        object-position: unset;
+    }
+
+    .question-content {
+        font-size: 14px;
+    }
+
     .panels-row {
         flex-direction: column !important;
         background-color: hsl(var(--h-shift), 10%, 20%);
