@@ -21,6 +21,7 @@ function _AnswerOptionTN({ answerValue, isSelected, selectSetter }) {
   return (
     <_DepthButtonBase
       text={text}
+      id={'possible-answer-' + answerValue}
       onClick={() => { selectSetter(answerValue) }}
       className={'answer-option ' + (isSelected? 'selected-answer' : '')}
     ></_DepthButtonBase>
@@ -46,7 +47,7 @@ export function AnswersTN({ questionID }) {
 
 function _AnswerOptionABC({ answerValue, answerContent, isSelected, selectSetter }) {
   return (
-    <div className={'abc-answer-group ' + (isSelected? "selected-abc-answer" : "") } onClick={() => {selectSetter(answerValue)}}>
+    <div id={'possible-answer-' + answerValue} className={'abc-answer-group ' + (isSelected? "selected-abc-answer" : "") } onClick={() => {selectSetter(answerValue)}}>
       <div className='abc-answer-value'>{answerValue}</div>
       <div className='abc-answer-content'>{answerContent}</div>
     </div>

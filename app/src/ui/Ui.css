@@ -50,7 +50,7 @@
 }
 
 .selected-answer {
-    background-color: var(--c-primary) !important;
+    background-color: var(--c-primary);
     box-shadow: none;
     transform: translateY(5px);
     outline: 2px dashed #ffffff29;

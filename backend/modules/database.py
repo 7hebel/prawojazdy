@@ -7,7 +7,6 @@ import os
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
-TOTAL_QUESTIONS = 2016
 
 
 def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
@@ -37,7 +36,7 @@ def __parse_answers(question_data: dict) -> dict:
 
 
 def fetch_random_question() -> dict:
-    q_rand_index = random.randint(1, TOTAL_QUESTIONS)
+    q_rand_index = random.randint(1, int(os.environ.get("TOTAL_QUESTIONS")))
     
     query = supabase.table("Questions").select("*").eq("index", q_rand_index)
     response = execute_query(query)
@@ -45,16 +44,28 @@ def fetch_random_question() -> dict:
     return __parse_answers(question_row)
 
 
+def fetch_question(index: int) -> dict:
+    query = supabase.table("Questions").select("*").eq("index", index)
+    response = execute_query(query)
+    question_row = response.model_dump()["data"][0]
+    return __parse_answers(question_row)
+
+def set_practice_index(client_id: str, index: int) -> None:
+    execute_query(
+        supabase.table("Clients").update({"practice_index": index}).eq("client_id", client_id)
+    )
+
 def create_anonymous_client() -> str:
     client_id = uuid.uuid4().hex
-    supabase.table("Clients").insert({
+    execute_query(supabase.table("Clients").insert({
         "client_id": client_id,
         "is_anon": True,
         "practice_seed": random.randint(1, 2_147_483_647) # int4 max
-    })
+    }))
 
     return client_id
 
+
 def get_client(client_id: str) -> dict:
-    return supabase.table("Clients").select("*").eq("client_id", client_id)
+    return execute_query(supabase.table("Clients").select("*").eq("client_id", client_id)).model_dump()["data"][0]
 

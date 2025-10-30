@@ -1,6 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Response, WebSocket
 import uvicorn
 import dotenv
 
@@ -30,10 +29,10 @@ async def static_media(media_name: str) -> Response:
 async def get_home() -> Response:
     return Response("200")
 
-@api.websocket("/ws/practice")
-async def ws_practice(ws_client: WebSocket) -> None:
+@api.websocket("/ws/practice/{client_id}")
+async def ws_practice(ws_client: WebSocket, client_id: str) -> None:
     await ws_client.accept()
-    await connection.WSQuizSessionHandler(ws_client).receive()
+    await connection.WSQuizSessionHandler(client_id, ws_client).initialize()
         
         
 if __name__ == "__main__":

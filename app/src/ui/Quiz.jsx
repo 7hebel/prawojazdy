@@ -19,11 +19,11 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
     if (questionData.category == "PODSTAWOWY") {
       actionButtonsSequence = [
         { text: "Start", seconds: 20, onClick: () => { startBasicQuestion() }},
-        { text: "Dalej", seconds: 15, onClick: () => { onContinue() } },
+        { text: "Dalej", seconds: 15, onClick: () => { onContinue(getSelectedAnswer()) } },
       ]
     } else {
       actionButtonsSequence = [
-        { text: "Dalej", seconds: 50, onClick: () => { onContinue() } },
+        { text: "Dalej", seconds: 50, onClick: () => { onContinue(getSelectedAnswer()) } },
       ]
     }
   }
@@ -47,8 +47,17 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
     })
   }
 
+  function getSelectedAnswer() {
+    return document.getElementById("answer-" + questionData.index).getAttribute("answer");
+  }
+
   useEffect(() => {
     if (!isExamMode) {
+      if (mediaType == "IMAGE") {
+        unblurMedia();
+        return
+      }
+      
       if (typeof navigator.getAutoplayPolicy === 'function') { // Firefox
         if (navigator.getAutoplayPolicy("mediaelement") === "disallowed") {
           mediaBlurAsPlayBtn();
@@ -122,7 +131,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
               isExamMode? 
                 <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
               :
-                <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={onContinue}></PrimaryActionButton>
+                <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={() => { if (getSelectedAnswer().length) onContinue(getSelectedAnswer())}}></PrimaryActionButton>
             }
           </div>
         </div>
@@ -147,7 +156,8 @@ export function PracticeQuizLoop() {
   const [WSConn, setWSConn] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket(import.meta.env.VITE_API + "ws/practice");
+    const clientId = localStorage.getItem("CLIENT_ID") ?? "anon";
+    const ws = new WebSocket(import.meta.env.VITE_API + "ws/practice/" + clientId);
     
     ws.onmessage = (ev) => {
       console.log(ev)
@@ -155,6 +165,20 @@ export function PracticeQuizLoop() {
 
       if (event == "QUESTION_DATA") {
         setQuestionData(content)
+      }
+
+      if (event == "SET_CLIENT_ID") {
+        localStorage.setItem("CLIENT_ID", content);
+      }
+
+      if (event == "ANSWER_VALIDATION") {
+        if (content.is_correct) {
+          ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+        } else {
+          document.getElementById("possible-answer-" + content.correct_answer).style.backgroundColor = 'green';
+          document.getElementById("possible-answer-" + content.given_answer).style.backgroundColor = 'red';
+          setTimeout(() => { ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null })) }, 3000)
+        }
       }
     }
 
@@ -167,11 +191,10 @@ export function PracticeQuizLoop() {
     setWSConn(ws);
   }, [])
 
-  // take answer as param, check with ws
-  async function nextQuestion() {
-    await WSConn.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+  async function checkAnswer(answer) {
+    await WSConn.send(JSON.stringify({ "event": "CHECK_ANSWER", "content": answer }))
   }
 
-  return <Quiz key={questionData?.index} questionData={questionData} isExamMode={false} onContinue={nextQuestion}></Quiz>
+  return <Quiz key={questionData?.index} questionData={questionData} isExamMode={false} onContinue={checkAnswer}></Quiz>
 }
 
