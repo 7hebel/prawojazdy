@@ -1,9 +1,12 @@
 Dokumenet o WS/Socketach (ENG)
 
-LGTM
 
 Na ponieidzałek: testy w playwrighcie (połączone z LGTM)
 - failure simulation, żeby w LGTM znaleźć powód.
+
+
+LGTM:
+    
 
 
 

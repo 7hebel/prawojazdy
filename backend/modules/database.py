@@ -4,6 +4,9 @@ import random
 import uuid
 import os
 
+from modules import observability
+
+
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
@@ -13,7 +16,7 @@ def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
     try:
         return query.execute()
     except postgrest.APIError as query_error:
-        print(f"db error: {query_error._raw_error}")
+        observability.db_logger.error(f"Request error: {query_error} ({query_error._raw_error})")
 
 
 def __parse_answers(question_data: dict) -> dict:
