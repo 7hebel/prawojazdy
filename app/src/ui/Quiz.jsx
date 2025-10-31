@@ -2,6 +2,55 @@ import { useEffect, useRef, useState } from "react";
 import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton } from "./Ui";
 import './Quiz.css'
 
+function NextQuestionTimeoutAnimation() {
+  const barRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    containerRef.current.style.height = "0px";
+    barRef.current.style.width = "0%";
+    void barRef.current.offsetWidth;
+
+    containerRef.current.style.height = "12px";
+    barRef.current.style.width = "102%";
+
+    const timeout = setTimeout(() => {
+      containerRef.current.style.height = "0px";
+    }, 2500);
+
+    return () => clearTimeout(timeout);
+  }, [])
+
+  return (
+    <div ref={containerRef} className="next-question-timeout-container" style={{height: 0}}>
+      <div ref={barRef} className="next-question-timeout-line" style={{width: 0}}></div>
+    </div>
+  )
+}
+
+function PracticeProgress({ questionNumber, hardQuestions }) {
+  const totalQuestions = import.meta.env.VITE_TOTAL_QUESTIONS;
+  const progressPercentage = Math.round((questionNumber / totalQuestions) * 100);
+  const hardPercentage = Math.round((hardQuestions / totalQuestions) * 100);
+
+  return (
+    <div className="practice-progress">
+      <div className="practice-progress-data">
+        <span className="important-text">{progressPercentage}%</span>
+        <span>
+          <span className="important-text">{questionNumber}</span>
+          /{totalQuestions}
+        </span>
+      </div>
+      <div className="practice-progress-bar-container">
+        <div className="practice-progress-bar-fill" style={{ width: progressPercentage + "%"}}></div>
+        <div className="practice-progress-bar-fill-hard" style={{width: hardPercentage + "%"}}></div>
+      </div>
+      <span className="practice-progress-hard-count">Błędy: {hardQuestions}</span>
+    </div>
+  )
+}
+
 
 export function Quiz({ questionData, isExamMode, onContinue }) {
   if (questionData == null) { return <h1>no data</h1> }
@@ -33,8 +82,10 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
   const actionbtn = useRef(null);
 
   function unblurMedia() {
-    mediablur.current.style.opacity = 0;
-    setTimeout(() => {mediablur.current.remove()}, 500)
+    if (mediablur.current) {
+      mediablur.current.style.opacity = 0;
+      setTimeout(() => {mediablur.current.remove()}, 500)
+    }
   }
 
   function mediaBlurAsPlayBtn() {
@@ -98,42 +149,55 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
     }
   }
 
+  function onPracticeNext(ev) {
+    if (getSelectedAnswer().length) {
+      onContinue(getSelectedAnswer());
+    } else {
+      ev.target.classList.add("error-animation");
+      setTimeout(() => {ev.target.classList.remove("error-animation")}, 501)
+    }
+  }
+
   return (
     <main id="quiz-view">
       <div className="quiz-container">
-        <div className="panels-row">
-          <div className="quiz-panel media-panel">
-            
-            <div className="media-container">
-              {
-                mediaType == "VIDEO" &&
-                <video id="display-media" ref={mediaelement} muted playsInline src={mediaSrc}></video>
-              }
-  
-              {
-                (mediaType == "IMAGE" || mediaType == "NOMEDIA") &&
-                <img id="display-media" ref={mediaelement} src={mediaSrc}></img>
-              }
-              {
-                questionData.category == "PODSTAWOWY" &&
-                <div ref={mediablur} id="media-blur" onClick={startBasicQuestion}>Zapoznaj się z pytaniem</div>
-              }
-            </div>
-            
-          </div>
-          <div className="quiz-panel actions-panel">
-            <div className="metadata-row">
-              <span>Tryb: <span className="important-text">{(isExamMode) ? 'egzamin' : 'nauka'}</span></span>
-              <span>Zestaw: <span className="important-text">{questionData.category.toLowerCase()}</span></span>
-              <span>Waga: <span className="important-text">{questionData.points}pkt.</span></span>
-            </div>
+        <div className="quiz-panel media-panel">
+          
+          <div className="media-container">
             {
-              isExamMode? 
-                <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
-              :
-                <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={() => { if (getSelectedAnswer().length) onContinue(getSelectedAnswer())}}></PrimaryActionButton>
+              mediaType == "VIDEO" &&
+              <video id="display-media" ref={mediaelement} muted playsInline src={mediaSrc}></video>
+            }
+
+            {
+              (mediaType == "IMAGE" || mediaType == "NOMEDIA") &&
+              <img id="display-media" ref={mediaelement} src={mediaSrc}></img>
+            }
+            {
+              questionData.category == "PODSTAWOWY" &&
+              <div ref={mediablur} id="media-blur" onClick={startBasicQuestion}>Zapoznaj się z pytaniem</div>
             }
           </div>
+          
+        </div>
+        <div className="quiz-panel actions-panel">
+          <div className="metadata-row">
+            <span>Tryb: <span className="important-text">{(isExamMode) ? 'egzamin' : 'nauka'}</span></span>
+            <span>Zestaw: <span className="important-text">{questionData.category.toLowerCase()}</span></span>
+            <span>Waga: <span className="important-text">{questionData.points}pkt.</span></span>
+          </div>
+          {
+            isExamMode?
+              <></>
+            :
+              <PracticeProgress questionNumber={questionData.number} hardQuestions={questionData._total_hard}></PracticeProgress>
+          }
+          {
+            isExamMode? 
+              <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
+            :
+              <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={onPracticeNext}></PrimaryActionButton>
+          }
         </div>
         <div className="quiz-panel question-panel">
           <span className="question-content">{questionData.question}</span>
@@ -165,6 +229,7 @@ export function PracticeQuizLoop() {
 
       if (event == "QUESTION_DATA") {
         setQuestionData(content)
+        setIsNextQuestionAnim(false);
       }
 
       if (event == "SET_CLIENT_ID") {
@@ -176,8 +241,9 @@ export function PracticeQuizLoop() {
           ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
         } else {
           document.getElementById("possible-answer-" + content.correct_answer).style.backgroundColor = 'green';
-          document.getElementById("possible-answer-" + content.given_answer).style.backgroundColor = 'red';
+          document.getElementById("possible-answer-" + content.given_answer).style.setProperty("background-color", "red", "important");
           setTimeout(() => { ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null })) }, 3000)
+          setIsNextQuestionAnim(true);
         }
       }
     }
@@ -185,6 +251,10 @@ export function PracticeQuizLoop() {
     ws.onopen = (ev) => {
       console.log("OPEN")
       ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+    }
+
+    ws.onerror = (ev) => {
+      navigator.reload();
     }
 
 
@@ -195,6 +265,14 @@ export function PracticeQuizLoop() {
     await WSConn.send(JSON.stringify({ "event": "CHECK_ANSWER", "content": answer }))
   }
 
-  return <Quiz key={questionData?.index} questionData={questionData} isExamMode={false} onContinue={checkAnswer}></Quiz>
+  const [isNextQuestionAnim, setIsNextQuestionAnim] = useState(false);
+  const key = questionData?.index;
+
+  return (
+    <>
+      {isNextQuestionAnim && <NextQuestionTimeoutAnimation key={'anim-' + key} /> }
+      <Quiz key={key} questionData={questionData} isExamMode={false} onContinue={checkAnswer}></Quiz>
+    </>
+  )
 }
 

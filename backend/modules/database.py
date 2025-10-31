@@ -13,8 +13,7 @@ def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
     try:
         return query.execute()
     except postgrest.APIError as query_error:
-        # logger.error(f"DB query error: \n{query.params} \n{query_error._raw_error}")
-        print("db error: " + query_error._raw_error)
+        print(f"db error: {query_error._raw_error}")
 
 
 def __parse_answers(question_data: dict) -> dict:
@@ -35,25 +34,43 @@ def __parse_answers(question_data: dict) -> dict:
     return question_data
 
 
-def fetch_random_question() -> dict:
-    q_rand_index = random.randint(1, int(os.environ.get("TOTAL_QUESTIONS")))
-    
-    query = supabase.table("Questions").select("*").eq("index", q_rand_index)
-    response = execute_query(query)
-    question_row = response.model_dump()["data"][0]
-    return __parse_answers(question_row)
-
-
 def fetch_question(index: int) -> dict:
     query = supabase.table("Questions").select("*").eq("index", index)
     response = execute_query(query)
     question_row = response.model_dump()["data"][0]
     return __parse_answers(question_row)
 
+
 def set_practice_index(client_id: str, index: int) -> None:
     execute_query(
         supabase.table("Clients").update({"practice_index": index}).eq("client_id", client_id)
     )
+
+def mark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
+    current_hard = client_data["practice_hard_questions"]
+    client_id = client_data["client_id"]
+    if question_index in current_hard:
+        return current_hard
+    
+    new_hard_list = current_hard + [question_index]
+    execute_query(
+        supabase.table("Clients").update({"practice_hard_questions": new_hard_list}).eq("client_id", client_id)
+    )
+    
+    return new_hard_list
+    
+def unmark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
+    current_hard = client_data["practice_hard_questions"]
+    client_id = client_data["client_id"]
+    if question_index not in current_hard:
+        return current_hard
+    
+    current_hard.remove(question_index)
+    execute_query(
+        supabase.table("Clients").update({"practice_hard_questions": current_hard}).eq("client_id", client_id)
+    )
+    
+    return current_hard
 
 def create_anonymous_client() -> str:
     client_id = uuid.uuid4().hex

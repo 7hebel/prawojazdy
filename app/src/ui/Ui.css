@@ -121,7 +121,6 @@
     position: relative;
     cursor: pointer;
     transition: filter .2s;
-
 }
 
 .button-timer-container:hover {
@@ -169,3 +168,29 @@
     box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 10%, 21%);
 }
 
+
+.error-animation {
+    animation: horizontal-shaking 0.5s ease-in-out;
+}
+
+@keyframes horizontal-shaking {
+    0% {
+        transform: translateX(0)
+    }
+
+    25% {
+        transform: translateX(5px)
+    }
+
+    50% {
+        transform: translateX(-5px)
+    }
+
+    75% {
+        transform: translateX(5px)
+    }
+
+    100% {
+        transform: translateX(0)
+    }
+}
