@@ -6,7 +6,8 @@ Na ponieidzałek: testy w playwrighcie (połączone z LGTM)
 
 
 LGTM:
-   metryki dla każdego pytania? 
+   - create dashboard on grafana (use sum function, NOT RATE in charts)
+
 
 
 

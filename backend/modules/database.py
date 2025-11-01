@@ -19,26 +19,6 @@ def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
         observability.db_logger.error(f"Request error: {query_error} ({query_error._raw_error})")
 
 
-
-
-# media = [m['media_name'] for m in execute_query(
-#     supabase.table("Questions").select("media_name")
-# ).model_dump()["data"]] 
-
-# missing = []
-# files = os.listdir("../media/")
-# for f in files:
-#     if f not in media:
-#         missing.append(f)
-
-# print(f"\n\n\n missing: {len(missing)}")
-# with open("BASE_NOT_LOCAL.txt", "a+") as f:
-#     for m in missing:
-#         f.write(m + '\n')
-
-
-
-
 def __parse_answers(question_data: dict) -> dict:
     """ Turn answer_a, answer_b, ... to: "answers": "TN"/{"A": "...", "B": "..."} """
     if not question_data["answer_a"]: # Tak/Nie

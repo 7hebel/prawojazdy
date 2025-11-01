@@ -1,17 +1,11 @@
-from prometheus_client import Summary, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import Summary, Counter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.resources import Resource
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Response, Request
 from opentelemetry import trace
 import logging_loki
 import logging
-import uvicorn
-import random
-import time
-import sys
 import os
 
 
@@ -68,3 +62,27 @@ tracer = __get_tracer()
 
 
 REQUEST_TIME_METRICS = Summary("request_processing_time", "Time spent processing the request.", ["endpoint"])
+
+TOTAL_ANSWERS = Counter(
+    "quiz_total_answers", 
+    "Total answers given per question.",
+    ["question_index", "client_id"]
+)
+
+CORRECT_ANSWERS = Counter(
+    "quiz_correct_answers",
+    "Correct answers given per question.",
+    ["question_index", "client_id"]
+)
+
+INCORRECT_ANSWERS = Counter(
+    "quiz_incorrect_answers",
+    "Incorrect answers given per question.",
+    ["question_index", "client_id"]
+)
+
+TIME_ANSWERING = Summary(
+    "quiz_time_answering_seconds",
+    "Time spent answering each question.",
+    ["question_index", "client_id"]
+)

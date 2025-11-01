@@ -1,5 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 import random
+import time
 import json
 import os
 
@@ -33,6 +34,7 @@ class WSQuizSessionHandler:
         
         self.__current_question: dict | None = None
         self.__response_span = None
+        self.__question_sent_time: float | None = None
         
         await self.receive()
             
@@ -87,18 +89,28 @@ class WSQuizSessionHandler:
                 del question_data["correct_answer"]
 
                 self.__response_span = observability.tracer.start_span("quiz-practice-response", attributes={"client_id": self.client_id, "question_index": question_index})
+                self.__question_sent_time = time.time()
                 return await self.ws_client.send_json(self.ws_response("QUESTION_DATA", question_data))
         
             case "CHECK_ANSWER":
                 if not self.__current_question["is_hard"]:
                     self.increment_question_index()
                 
+                question_index = self.__current_question['index']
+                
+                self.__response_span.add_event("Received response", attributes={"answer": content, "question_index": question_index})
+                answering_time = time.time() - self.__question_sent_time
+                
+                observability.TOTAL_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
+                observability.TIME_ANSWERING.labels(question_index=question_index, client_id=self.client_id).observe(answering_time)
+                
                 if self.__current_question['correct_answer'] == content:
-                    observability.client_logger.info(f"Correct answer={content} for question_index={self.__current_question['index']} by client_id={self.client_id}")
+                    observability.client_logger.info(f"Correct answer={content} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
                     if self.__current_question["is_hard"]:
-                        observability.client_logger.debug(f"Correctly answered question_index={self.__current_question['index']} was marked as HARD by client_id={self.client_id}. Unmarking...")
-                        self.client_data['practice_hard_questions'] = database.unmark_as_hard_question(self.client_data, self.__current_question['index'])
+                        observability.client_logger.debug(f"Correctly answered question_index={question_index} was marked as HARD by client_id={self.client_id}. Unmarking...")
+                        self.client_data['practice_hard_questions'] = database.unmark_as_hard_question(self.client_data, question_index)
 
+                    observability.CORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
                     self.__response_span.end()
                     return await self.ws_client.send_json(self.ws_response("ANSWER_VALIDATION", {
                         "is_correct": True,
@@ -107,11 +119,12 @@ class WSQuizSessionHandler:
                     }))
                     
                 else:
-                    observability.client_logger.info(f"Incorrect answer={content} for question_index={self.__current_question['index']} by client_id={self.client_id}")
+                    observability.client_logger.info(f"Incorrect answer={content} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
                     if not self.__current_question["is_hard"]:
-                        observability.client_logger.debug(f"Inorrectly answered question_index={self.__current_question['index']} is being marked as HARD by client_id={self.client_id}. Marking...")
-                        self.client_data['practice_hard_questions'] = database.mark_as_hard_question(self.client_data, self.__current_question['index'])
-                        
+                        observability.client_logger.debug(f"Inorrectly answered question_index={question_index} is being marked as HARD by client_id={self.client_id}. Marking...")
+                        self.client_data['practice_hard_questions'] = database.mark_as_hard_question(self.client_data, question_index)
+
+                    observability.INCORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
                     self.__response_span.end()
                     return await self.ws_client.send_json(self.ws_response("ANSWER_VALIDATION", {
                         "is_correct": False,
