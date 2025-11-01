@@ -6,7 +6,7 @@ Na ponieidzałek: testy w playwrighcie (połączone z LGTM)
 
 
 LGTM:
-    
+   metryki dla każdego pytania? 
 
 
 

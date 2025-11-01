@@ -31,7 +31,10 @@ function NextQuestionTimeoutAnimation() {
 function PracticeProgress({ questionNumber, hardQuestions }) {
   const totalQuestions = import.meta.env.VITE_TOTAL_QUESTIONS;
   const progressPercentage = Math.round((questionNumber / totalQuestions) * 100);
-  const hardPercentage = Math.round((hardQuestions / totalQuestions) * 100);
+  let hardPercentage = Math.round((hardQuestions / totalQuestions) * 100);
+  if (hardQuestions > 0 && hardPercentage < 1) {
+    hardPercentage = 1;
+  }
 
   return (
     <div className="practice-progress">

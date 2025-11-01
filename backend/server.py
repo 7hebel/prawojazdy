@@ -4,6 +4,7 @@ from fastapi import FastAPI, Response, WebSocket, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import dotenv
+import os
 
 dotenv.load_dotenv(".env")
 
@@ -24,13 +25,18 @@ api.add_middleware(
 async def measure_response_time(request: Request, call_next):
     tracking_id = request.method + " /" + request.url.path.split("/")[1]
     with observability.REQUEST_TIME_METRICS.labels(endpoint=tracking_id).time():
-        with observability.tracer.start_as_current_span(tracking_id + " - endpoint"):
+        with observability.tracer.start_as_current_span(tracking_id + "-endpoint"):
             return await call_next(request)
 
 @api.get("/media/{media_name}")
 async def static_media(media_name: str, request: Request) -> Response:
-    observability.api_logger.info(f"Accessing media: medianame={media_name} from: client_host={request.client.host}")
-    with open("../media/" + media_name, "rb") as file:
+    path = "../media/" + media_name
+    if not os.path.exists(path):
+        observability.api_logger.error(f"Failed to access media: medianame={media_name} from client_host={request.client.host} (FILE NOT FOUND)")
+        return Response(None, 404)
+    
+    with open(path, "rb") as file:
+        observability.api_logger.info(f"Accessing media: medianame={media_name} from: client_host={request.client.host}")
         return Response(file.read(), media_type="video/mp4")
 
 @api.get("/")

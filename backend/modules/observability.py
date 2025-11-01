@@ -62,6 +62,7 @@ def __get_tracer() -> trace.Tracer:
 client_logger = __get_logger("client-log")
 api_logger = __get_logger("api-log")
 db_logger = __get_logger("db-log")
+test_logger = __get_logger("test-log")
 
 tracer = __get_tracer()
 
