@@ -107,7 +107,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
 
   useEffect(() => {
     if (!isExamMode) {
-      if (mediaType == "IMAGE") {
+      if (mediaType == "IMAGE" || mediaType == "NOMEDIA") {
         unblurMedia();
         return
       }
@@ -116,6 +116,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
         if (navigator.getAutoplayPolicy("mediaelement") === "disallowed") {
           mediaBlurAsPlayBtn();
         } else {
+          mediaelement.current.play();
           unblurMedia();
         }
       } else { // Chrome
@@ -126,6 +127,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
           mediaBlurAsPlayBtn();
         }
       }
+
       mediaelement.current.addEventListener("click", () => { mediaelement.current.play(); })
     } 
   }, [])
@@ -162,7 +164,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
   }
 
   return (
-    <main id="quiz-view">
+    <main id="quiz-view" question_index={questionData.index}>
       <div className="quiz-container">
         <div className="quiz-panel media-panel">
           
@@ -199,7 +201,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
             isExamMode? 
               <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
             :
-              <PrimaryActionButton ref={actionbtn} text="Dalej" onClick={onPracticeNext}></PrimaryActionButton>
+              <PrimaryActionButton ref={actionbtn} id='continue-btn' text="Dalej" onClick={onPracticeNext}></PrimaryActionButton>
           }
         </div>
         <div className="quiz-panel question-panel">

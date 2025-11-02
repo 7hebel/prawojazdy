@@ -17,6 +17,16 @@ class WSQuizSessionHandler:
         self.client_id = client_id
         
     async def initialize(self) -> None:
+        self.questions_line = list(range(1, TOTAL_QUESTIONS))
+        
+        if self.client_id != "anon":
+            client_data = database.get_client(self.client_id)
+            if client_data is None:
+                observability.client_logger.warning(f"Client started WS/practice connection with client_id={self.client_id} but no user with this ID found.")
+                self.client_id = "anon"
+            else:
+                self.client_data = client_data
+        
         if self.client_id == "anon":
             self.client_id = database.create_anonymous_client()
             
@@ -25,11 +35,9 @@ class WSQuizSessionHandler:
 
             await self.ws_client.send_json(self.ws_response("SET_CLIENT_ID", self.client_id))
         
-        self.client_data = database.get_client(self.client_id)
-        self.questions_line = list(range(1, TOTAL_QUESTIONS))
-        
-        random.seed(self.client_data['practice_seed'])
-        random.shuffle(self.questions_line)
+            self.client_data = database.get_client(self.client_id)
+
+        random.Random(self.client_data['practice_seed']).shuffle(self.questions_line)  # Thread-safe
         observability.client_logger.debug(f"Shuffled questions for client_id={self.client_id} with seed={self.client_data['practice_seed']}. The questions line starts with: shuffled_line='{self.questions_line[:3]}'")
         
         self.__current_question: dict | None = None

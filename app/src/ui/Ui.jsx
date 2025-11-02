@@ -112,8 +112,8 @@ export function ButtonTimerSequence({ sequence, ref, index }) {
 
 
 
-export function PrimaryActionButton({ text, onClick, ref, className }) {
-  return <_DepthButtonBase ref={ref} className={'action-button ' + (className ?? '')} text={text} onClick={onClick}></_DepthButtonBase>
+export function PrimaryActionButton({ text, onClick, ref, className, id }) {
+  return <_DepthButtonBase ref={ref} id={id} className={'action-button ' + (className ?? '')} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
 export function SecondaryActionButton({ text, onClick, ref }) {

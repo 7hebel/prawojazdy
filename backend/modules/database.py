@@ -76,7 +76,7 @@ def unmark_as_hard_question(client_data: dict, question_index: int) -> list[int]
     return current_hard
 
 def create_anonymous_client() -> str:
-    client_id = uuid.uuid4().hex
+    client_id = str(uuid.uuid4())
     execute_query(supabase.table("Clients").insert({
         "client_id": client_id,
         "is_anon": True,
@@ -86,6 +86,9 @@ def create_anonymous_client() -> str:
     return client_id
 
 
-def get_client(client_id: str) -> dict:
-    return execute_query(supabase.table("Clients").select("*").eq("client_id", client_id)).model_dump()["data"][0]
+def get_client(client_id: str) -> dict | None:
+    clients_data = execute_query(supabase.table("Clients").select("*").eq("client_id", client_id)).model_dump()["data"]
+    if not clients_data:
+        return
+    return clients_data[0]
 

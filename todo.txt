@@ -1,13 +1,1 @@
 Dokumenet o WS/Socketach (ENG)
-
-
-Na ponieidzałek: testy w playwrighcie (połączone z LGTM)
-- failure simulation, żeby w LGTM znaleźć powód.
-
-
-LGTM:
-   - create dashboard on grafana (use sum function, NOT RATE in charts)
-
-
-
-

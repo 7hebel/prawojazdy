@@ -53,15 +53,22 @@ def __get_tracer() -> trace.Tracer:
     return tracer_provider.get_tracer(__name__)
 
 
+# Loggers (Loki)
 client_logger = __get_logger("client-log")
 api_logger = __get_logger("api-log")
 db_logger = __get_logger("db-log")
 test_logger = __get_logger("test-log")
 
+# Tracer (Tempo)
 tracer = __get_tracer()
 
 
-REQUEST_TIME_METRICS = Summary("request_processing_time", "Time spent processing the request.", ["endpoint"])
+# Metrics (Prometheus -> Mimir)
+REQUEST_TIME_METRICS = Summary(
+    "request_processing_time", 
+    "Time spent processing the request.", 
+    ["endpoint"]
+)
 
 TOTAL_ANSWERS = Counter(
     "quiz_total_answers", 
@@ -86,3 +93,14 @@ TIME_ANSWERING = Summary(
     "Time spent answering each question.",
     ["question_index", "client_id"]
 )
+
+PASSED_TESTS = Counter(
+    "tests_passed",
+    "Total completly passed test sequences amount."
+)
+
+FAILED_TESTS = Counter(
+    "tests_failed",
+    "Total failed tests amount."
+)
+

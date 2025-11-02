@@ -43,6 +43,15 @@ async def static_media(media_name: str, request: Request) -> Response:
 async def get_home() -> Response:
     return Response("200")
 
+@api.get("/test-result/{result}")
+async def get_test_result(result: str) -> Response:
+    """ Increment metrics based on the result from the test process """
+    if result == "pass":
+        observability.PASSED_TESTS.inc()
+    if result == "fail":
+        observability.FAILED_TESTS.inc()
+
+
 @api.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
