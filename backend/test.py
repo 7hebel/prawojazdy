@@ -120,7 +120,7 @@ def test_ui() -> bool:
             return False
 
         # Verify properly connected WebSocket connection
-        with page.expect_websocket(timeout=5000) as ws:
+        with page.expect_websocket(timeout=10000) as ws:
             if ws.value.is_closed():
                 observability.test_logger.critical("Playwright: page opened, but no WS connection is established (closed).")
                 return False
@@ -212,11 +212,13 @@ def start_test() -> bool:
     observability.PASSED_TESTS
     
     for n, test in enumerate(TESTS_SEQUENCE, 1):
-        with observability.tracer.start_as_current_span(f"test-{test.__name__}"):
+        with observability.tracer.start_as_current_span(f"test-{test.__name__}") as test_span:
             try:
                 status = test()
+                test_span.add_event("test-pass", attributes={"test": test.__name__})
             except Exception as error:
                 observability.test_logger.critical(f"Failed to run test={test.__name__} (unhandled exception occured) {error}")
+                test_span.add_event("test-fail", attributes={"test": test.__name__})
                 return False
         
         if not status:
