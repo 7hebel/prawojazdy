@@ -62,7 +62,6 @@ test_logger = __get_logger("test-log")
 # Tracer (Tempo)
 tracer = __get_tracer()
 
-
 # Metrics (Prometheus -> Mimir)
 REQUEST_TIME_METRICS = Summary(
     "request_processing_time", 

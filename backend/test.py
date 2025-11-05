@@ -47,7 +47,7 @@ def test_lgtm_stack() -> bool:
                 
         except Exception as e:
             observability.test_logger.critical(f"LGTM service={name} at url={url} failed to respond. {e}")
-            return 
+            return False
         
     return True
         
@@ -66,7 +66,7 @@ def test_is_api_and_app_up() -> bool:
                 
         except Exception as e:
             observability.test_logger.critical(f"Local service={name} at url={url} failed to respond. {e}")
-            return 
+            return False
         
     return True
    
@@ -102,16 +102,13 @@ def test_custom_test_client() -> bool:
     return True  
 
 def test_ui() -> bool:
-    # THE practice_seed for the test client should make a question line like this: TN, ABC, TN, ABC
-    # Make a correct and incorrect answer for TN and ABC question and check the result on the page
-    # Check the progress bar (should have text błędy: 2), and 4/2017
     TEST_CLIENT_ID = os.getenv('TEST_CLIENT_ID')
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page()
         page.add_init_script(f"localStorage.setItem('CLIENT_ID', '{TEST_CLIENT_ID}');")
-        page.goto("http://localhost:5173/quiz")
+        page.goto("http://localhost:5173/quiz", wait_until="domcontentloaded")
 
         # Verify saved CLIENT_ID from localStorage
         saved_client_id = page.evaluate("localStorage.getItem('CLIENT_ID')")
@@ -126,8 +123,8 @@ def test_ui() -> bool:
                 return False
             
         # Check if base HTML structure is loaded.
-        locator = page.wait_for_selector("main#quiz-view", timeout=3000)
-        if locator is None:
+        main_view_locator = page.wait_for_selector("main#quiz-view", timeout=3000)
+        if main_view_locator is None:
             observability.test_logger.critical("Playwright: the <main id='quiz-view'> element has not been loaded after 3 seconds since WS connection established...")
             return False
 
@@ -142,7 +139,7 @@ def test_ui() -> bool:
         FOURTH_QUESTION_INDEX = "644"
 
         # Check if correct question has been loaded.
-        loaded_question_index = locator.get_attribute("question_index")
+        loaded_question_index = main_view_locator.get_attribute("question_index")
         if loaded_question_index != FIRST_QUESTION_INDEX:
             observability.test_logger.critical(f"Playwright: client received incorrect question! Expected question: {FIRST_QUESTION_INDEX}, got: {loaded_question_index}. This may happen when: incorrect practice_seed is set (not '3') or the total amount of questions has changed")
             return False
@@ -156,12 +153,6 @@ def test_ui() -> bool:
             observability.test_logger.critical(f"Playwright: clicked `next` button without selecting a answer but the button did not contain a `error-animation` class after 100ms...")
             return False
 
-        # Check if question and is visible somewhere on site.
-        first_question_data = database.fetch_question(int(FIRST_QUESTION_INDEX))
-        if not page.get_by_text(first_question_data["question"]).is_visible():
-            observability.test_logger.critical("Playwright: Question content is not visible on the site")
-            return False
-        
         
         def _select_answer_and_check_next_question(answer_value: str, is_long_wait: bool, next_question_index: str | None) -> bool:
             # Select and confirm answer.
@@ -177,7 +168,27 @@ def test_ui() -> bool:
                 if current_question_index != next_question_index:
                     observability.test_logger.critical(f"Playwright: The displayed question has not changed from {current_question_index} to desired {next_question_index}")
                     return False
-            
+                
+                # Check if question and all answers are visible on site.
+                question_data = database.fetch_question(int(next_question_index))
+                if not page.get_by_text(question_data["question"]).is_visible():
+                    observability.test_logger.critical(f"Playwright: Question content is not visible on the site after loading next question: {next_question_index}")
+                    return False
+                
+                answers_content = []
+                if question_data["correct_answer"] in "TN":
+                    answers_content.append("Tak")
+                    answers_content.append("Nie")
+                else:
+                    answers_content.append(question_data["answers"]["A"])
+                    answers_content.append(question_data["answers"]["B"])
+                    answers_content.append(question_data["answers"]["C"])
+                    
+                for answer_content in answers_content:
+                    if not page.get_by_text(answer_content).is_visible():
+                        observability.test_logger.critical(f"Playwright: Answer content: '{answer_content}' is not visible on the site after loading next question: {next_question_index}")
+                        return False
+                
             return True
             
         # Answer first question (Tak/Nie) correctly (Nie).
@@ -209,8 +220,6 @@ TESTS_SEQUENCE = [
 
 @observability.tracer.start_as_current_span("test-sequence", attributes={"total_tests": len(TESTS_SEQUENCE), "sequence": [t.__name__ for t in TESTS_SEQUENCE]})
 def start_test() -> bool:
-    observability.PASSED_TESTS
-    
     for n, test in enumerate(TESTS_SEQUENCE, 1):
         with observability.tracer.start_as_current_span(f"test-{test.__name__}") as test_span:
             try:
