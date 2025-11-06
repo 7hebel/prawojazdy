@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton } from "./Ui";
+import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton, TopPanel } from "./Ui";
+import { BadgeQuestionMark, ArrowRight } from 'lucide-react';
 import './Quiz.css'
 
 function NextQuestionTimeoutAnimation() {
@@ -167,7 +168,6 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
     <main id="quiz-view" question_index={questionData.index}>
       <div className="quiz-container">
         <div className="quiz-panel media-panel">
-          
           <div className="media-container">
             {
               mediaType == "VIDEO" &&
@@ -201,13 +201,15 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
             isExamMode? 
               <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex}></ButtonTimerSequence>
             :
-              <PrimaryActionButton ref={actionbtn} id='continue-btn' text="Dalej" onClick={onPracticeNext}></PrimaryActionButton>
+              <PrimaryActionButton ref={actionbtn} id='continue-btn' text="Dalej" icon={<ArrowRight className="icon icon-light"/>} onClick={onPracticeNext}></PrimaryActionButton>
           }
         </div>
         <div className="quiz-panel question-panel">
+          <BadgeQuestionMark className="icon"/>
           <span className="question-content">{questionData.question}</span>
         </div>
         <div className="answers-panel">
+          <div className="separator"></div>
           {
             questionData.answers == "TN" ? 
             <AnswersTN questionID={questionData.index}></AnswersTN> :
@@ -220,63 +222,91 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
 }
 
 
+function sessionConnectionHandler(mode, setQuestionData, setIsNextQuestionAnim) {
+  if (mode !== "exam" && mode !== "practice") {
+    throw new Error(`Invalid connection mode: ${mode} use 'exam' or 'practice'`);
+  }
+  
+  const clientId = localStorage.getItem("CLIENT_ID") ?? "anon";
+  const ws = new WebSocket(import.meta.env.VITE_API + "ws/" + mode + "/" + clientId);
+
+  ws.onmessage = (ev) => {
+    console.log(ev)
+    const { event, content } = JSON.parse(ev.data);
+
+    if (event == "QUESTION_DATA") {
+      setQuestionData(content)
+      setIsNextQuestionAnim(false);
+    }
+
+    if (event == "SET_CLIENT_ID") {
+      localStorage.setItem("CLIENT_ID", content);
+    }
+
+    if (event == "ANSWER_VALIDATION") {
+      if (content.is_correct) {
+        ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+      } else {
+        document.getElementById("possible-answer-" + content.correct_answer).style.backgroundColor = 'green';
+        document.getElementById("possible-answer-" + content.given_answer).style.setProperty("background-color", "red", "important");
+        setTimeout(() => { ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null })) }, 3000)
+        setIsNextQuestionAnim(true);
+      }
+    }
+  }
+
+  ws.onopen = (ev) => {
+    console.log("OPEN")
+    ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
+  }
+
+  ws.onerror = (ev) => {
+    location.reload();
+  }
+
+  return ws;
+}
+
 export function PracticeQuizLoop() {
   const [questionData, setQuestionData] = useState(null);
   const [WSConn, setWSConn] = useState(null);
+  const [isNextQuestionAnim, setIsNextQuestionAnim] = useState(false);
+  const key = questionData?.index;
 
   useEffect(() => {
-    const clientId = localStorage.getItem("CLIENT_ID") ?? "anon";
-    const ws = new WebSocket(import.meta.env.VITE_API + "ws/practice/" + clientId);
-    
-    ws.onmessage = (ev) => {
-      console.log(ev)
-      const { event, content } = JSON.parse(ev.data);
-
-      if (event == "QUESTION_DATA") {
-        setQuestionData(content)
-        setIsNextQuestionAnim(false);
-      }
-
-      if (event == "SET_CLIENT_ID") {
-        localStorage.setItem("CLIENT_ID", content);
-      }
-
-      if (event == "ANSWER_VALIDATION") {
-        if (content.is_correct) {
-          ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
-        } else {
-          document.getElementById("possible-answer-" + content.correct_answer).style.backgroundColor = 'green';
-          document.getElementById("possible-answer-" + content.given_answer).style.setProperty("background-color", "red", "important");
-          setTimeout(() => { ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null })) }, 3000)
-          setIsNextQuestionAnim(true);
-        }
-      }
-    }
-
-    ws.onopen = (ev) => {
-      console.log("OPEN")
-      ws.send(JSON.stringify({ "event": "GET_QUESTION", "content": null }))
-    }
-
-    ws.onerror = (ev) => {
-      navigator.reload();
-    }
-
-
-    setWSConn(ws);
+    setWSConn(sessionConnectionHandler("practice", setQuestionData, setIsNextQuestionAnim))
   }, [])
 
   async function checkAnswer(answer) {
     await WSConn.send(JSON.stringify({ "event": "CHECK_ANSWER", "content": answer }))
   }
 
-  const [isNextQuestionAnim, setIsNextQuestionAnim] = useState(false);
-  const key = questionData?.index;
-
   return (
     <>
       {isNextQuestionAnim && <NextQuestionTimeoutAnimation key={'anim-' + key} /> }
       <Quiz key={key} questionData={questionData} isExamMode={false} onContinue={checkAnswer}></Quiz>
+    </>
+  )
+}
+
+export function ExamQuizLoop() {
+  const [questionData, setQuestionData] = useState(null);
+  const [WSConn, setWSConn] = useState(null);
+  const [isNextQuestionAnim, setIsNextQuestionAnim] = useState(false);
+  const key = questionData?.index;
+
+  useEffect(() => {
+    setWSConn(sessionConnectionHandler("exam", setQuestionData, setIsNextQuestionAnim))
+  }, [])
+
+  async function checkAnswer(answer) {
+    await WSConn.send(JSON.stringify({ "event": "CHECK_ANSWER", "content": answer }))
+  }
+
+  return (
+    <>
+      {isNextQuestionAnim && <NextQuestionTimeoutAnimation key={'anim-' + key} /> }
+      <Quiz key={key} questionData={questionData} isExamMode={true} onContinue={checkAnswer}></Quiz>
     </>
   )
 }

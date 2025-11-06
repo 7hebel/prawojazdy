@@ -1,0 +1,9 @@
+account
+exam mode
+keyboard support + list of shortcuts on toppanel
+themes (choose from toppanel)
+move css colors to vars
+change "no data" to a spinner (loader)
+onboarding message (no account needed, exam mode)
+easter egg on wrong answer public/wrong.png
+after completing the practice loop, show the message "completed" and reset practice_index, change practice_seed

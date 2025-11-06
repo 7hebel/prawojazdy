@@ -22,7 +22,7 @@
     align-items: center;
     padding: 4px 8px;
     background-color: hsl(var(--h-shift), 10%, 24%);
-    border: 2px solid #5f5f5f29;
+    border: 2px solid #ffffff17;
     box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 10%, 21%);
     border-radius: 4px;
     color: hsl(var(--h-shift), 13%, 81%);
@@ -168,6 +168,65 @@
     box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 10%, 21%);
 }
 
+
+.icon {
+    color: hsla(var(--h-shift), 8%, 60%, 70%);
+    max-height: 18px;
+    margin-right: 6px;
+    pointer-events: none;
+}
+
+.icon-light {
+    color: hsla(var(--h-shift), 10%, 80%, 100%);
+    max-height: 16px;
+}
+
+
+.top-panel {
+    width: 100%;
+    padding-inline: 24px;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.top-panel-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.top-panel-actions > span {
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: white;
+    gap: 2px;
+    opacity: .8;
+    transition: opacity .2s;
+}
+
+.top-panel-actions > span:hover {
+    opacity: 1;
+}
+
+.top-panel-icon {
+    max-height: 14px;
+    opacity: .6;
+}
+
+.vert-sep {
+    width: 1.5px;
+    border-radius: 2px;
+    height: 80%;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-left: 4px;
+}
 
 .error-animation {
     animation: horizontal-shaking 0.5s ease-in-out;

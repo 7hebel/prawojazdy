@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import './Ui.css';
+import { User, BookCheck } from 'lucide-react';
 
-
-function _DepthButtonBase({ text, onClick, className, ...attrs }) {
+function _DepthButtonBase({ text, onClick, className, icon, ...attrs }) {
   return (
     <button
       className={"ui-btn-depth " + className}
@@ -10,10 +10,10 @@ function _DepthButtonBase({ text, onClick, className, ...attrs }) {
       {...attrs}
     >
       {text}
+      {icon}
     </button>
   )
 }
-
 
 
 function _AnswerOptionTN({ answerValue, isSelected, selectSetter }) {
@@ -42,8 +42,6 @@ export function AnswersTN({ questionID }) {
     </div>
   )
 }
-
-
 
 function _AnswerOptionABC({ answerValue, answerContent, isSelected, selectSetter }) {
   return (
@@ -110,13 +108,24 @@ export function ButtonTimerSequence({ sequence, ref, index }) {
   return <ButtonTimer seqnum={index} ref={ref} key={index} text={current.text} seconds={current.seconds} onClick={current.onClick}></ButtonTimer>
 }
 
-
-
-export function PrimaryActionButton({ text, onClick, ref, className, id }) {
-  return <_DepthButtonBase ref={ref} id={id} className={'action-button ' + (className ?? '')} text={text} onClick={onClick}></_DepthButtonBase>
+export function PrimaryActionButton({ text, onClick, ref, className, id, icon }) {
+  return <_DepthButtonBase ref={ref} id={id} className={'action-button ' + (className ?? '')} text={text} onClick={onClick} icon={icon}></_DepthButtonBase>
 }
 
 export function SecondaryActionButton({ text, onClick, ref }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
+export function TopPanel() {
+
+  return (
+    <div className='top-panel'>
+      <span></span>
+      <div className='top-panel-actions'>
+        <span><User className='top-panel-icon'/>Konto</span>
+        <div className='vert-sep'></div>
+        <span><BookCheck className='top-panel-icon'/>Egzamin</span>
+      </div>
+    </div>
+  )
+}

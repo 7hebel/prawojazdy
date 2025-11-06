@@ -10,6 +10,7 @@ dotenv.load_dotenv(".env")
 
 from modules import observability
 from modules import connection
+from modules import questions
 
 
 api = FastAPI()
@@ -56,15 +57,18 @@ async def get_test_result(result: str) -> Response:
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-@api.websocket("/ws/practice/{client_id}")
-async def ws_practice(ws_client: WebSocket, client_id: str) -> None:
-    observability.api_logger.info(f"Started WS connection for category=practice by client_id={client_id}")
-    await ws_client.accept()
-    await connection.WSQuizSessionHandler(client_id, ws_client).initialize()
+@api.websocket("/ws/{mode}/{client_id}")
+async def ws_quiz_loop(mode: str, ws_client: WebSocket, client_id: str) -> None:
+    if mode not in ("practice", "exam"):
+        observability.api_logger.error(f"Failed to initiate WS connection: invalid mode={mode} by client_id={client_id} client_host={ws_client.client.host}")    
+        return
+        
+    observability.api_logger.info(f"Started WS connection for mode={mode} by client_id={client_id} client_host={ws_client.client.host}")
+
+    questions_manager = questions.get_questions_manager_base(mode)
+    await connection.WebSocketHandler(client_id, ws_client, mode, questions_manager).initialize()
         
         
 if __name__ == "__main__":
     FastAPIInstrumentor.instrument_app(api)
     uvicorn.run(api)
-
-

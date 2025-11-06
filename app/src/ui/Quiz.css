@@ -15,6 +15,8 @@
     max-width: 1600px;
     gap: 8px;
     padding: 20px;
+    padding-top: 16px;
+    place-content: center;
 }
 
 .quiz-panel {
@@ -40,6 +42,9 @@
 .question-panel {
     width: 100%;
     grid-area: 2 / 1 / 3 / 3;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .media-container {
@@ -59,7 +64,6 @@
     max-width: 100%;
     display: block;
     border-radius: 6px;
-    border: 1px solid #ffffff21;
 }
 
 #media-blur {
@@ -91,7 +95,6 @@
     width: 100%;
     display: grid;
     place-items: center;
-    margin-top: 20px;
     grid-area: 3 / 1 / 4 / 3;
 }
 
@@ -212,6 +215,14 @@
     transition: width 2.5s linear;
 }
 
+.separator {
+    width: 60%;
+    height: 3px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.03);
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
 
 
 @media only screen and (max-width: 1050px) {
@@ -219,10 +230,6 @@
         padding: 8px !important;
     }
     
-    .answers-panel {
-        margin-top: 12px;
-    }
-
     #display-media {
         max-height: 45dvh;
         max-width: 100%;

@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import App from "./app";
+import { App } from "./App";
 import UiTest from "./ui/UiTest";
 import { PracticeQuizLoop } from "./ui/Quiz";
 import './index.css';

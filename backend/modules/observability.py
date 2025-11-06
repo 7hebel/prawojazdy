@@ -1,4 +1,4 @@
-from prometheus_client import Summary, Counter
+from prometheus_client import Summary, Gauge
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace import TracerProvider
@@ -69,19 +69,19 @@ REQUEST_TIME_METRICS = Summary(
     ["endpoint"]
 )
 
-TOTAL_ANSWERS = Counter(
+TOTAL_ANSWERS = Gauge(
     "quiz_total_answers", 
     "Total answers given per question.",
     ["question_index", "client_id"]
 )
 
-CORRECT_ANSWERS = Counter(
+CORRECT_ANSWERS = Gauge(
     "quiz_correct_answers",
     "Correct answers given per question.",
     ["question_index", "client_id"]
 )
 
-INCORRECT_ANSWERS = Counter(
+INCORRECT_ANSWERS = Gauge(
     "quiz_incorrect_answers",
     "Incorrect answers given per question.",
     ["question_index", "client_id"]
@@ -93,12 +93,12 @@ TIME_ANSWERING = Summary(
     ["question_index", "client_id"]
 )
 
-PASSED_TESTS = Counter(
+PASSED_TESTS = Gauge(
     "tests_passed",
     "Total completly passed test sequences amount."
 )
 
-FAILED_TESTS = Counter(
+FAILED_TESTS = Gauge(
     "tests_failed",
     "Total failed tests amount."
 )
