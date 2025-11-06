@@ -224,6 +224,114 @@
     margin-bottom: 24px;
 }
 
+.result-status {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    font-weight: 500;
+    gap: 6px;
+    
+}
+
+.entry-title {
+    color: hsl(var(--h-shift), 12%, 72%);
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.entry-value {
+    color: hsl(var(--h-shift), 12%, 90%);
+}
+
+.entry-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.success-color {
+    color: rgb(172, 206, 172)
+}
+
+.fail-color {
+    color: rgb(228, 177, 177);
+}
+
+.wrong-answers-title-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    margin-block: 16px 8px;
+    font-size: 14px;
+}
+
+.wrong-answers-title {
+    color: hsl(var(--h-shift), 10%, 90%);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.wrong-answers-container {
+    width: 100%;
+    padding: 8px;
+    max-height: 60dvh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exam-wrong-answer {
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px
+}
+
+.exam-wrong-media {
+    display: flex;
+    justify-content: center;
+}
+
+.exam-wrong-media > video, 
+.exam-wrong-media > img {
+    width: 60%;
+    border-radius: 4px;
+    outline: 1px solid #ffffff2f;
+}
+
+.wrong-answers-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-self: center;
+    gap: 8px;
+    color: hsl(var(--h-shift), 10%, 70%);
+    font-weight: 600;
+    font-size: 18px;
+    
+}
+
+.wrong-answer-control {
+    color: white;
+    opacity: .8;
+    padding: 2px;
+    transition: opacity .2s;
+    cursor: pointer;
+}
+
+.wrong-answer-control:hover {
+    opacity: 1;
+}
+
 
 @media only screen and (max-width: 1050px) {
     .quiz-container {
@@ -264,6 +372,5 @@
         grid-area: 4 / 1 / 5 / 3 !important;
         height: 100%;
     }
-
 
 }

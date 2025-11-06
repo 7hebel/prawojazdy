@@ -92,3 +92,46 @@ def get_client(client_id: str) -> dict | None:
         return
     return clients_data[0]
 
+
+def generate_exam_line() -> list[dict]:
+    """  
+    20 questions from "PODSTAWOWY" set:
+        - 10x 3p.
+        - 6x 2p.
+        - 4x 1p.
+        
+    12 questions from "SPECJALISTYCZNY" set:
+        - 6x 3p.
+        - 4x 2p.
+        - 2x 1p.
+    """
+    
+    # queries = [
+    #     supabase.table("exam_podstawowy_3p").select("*").limit(10),
+    #     supabase.table("exam_podstawowy_2p").select("*").limit(6),
+    #     supabase.table("exam_podstawowy_1p").select("*").limit(4),
+        
+    #     supabase.table("exam_specjalistyczny_3p").select("*").limit(6),
+    #     supabase.table("exam_specjalistyczny_2p").select("*").limit(4),
+    #     supabase.table("exam_specjalistyczny_1p").select("*").limit(2),
+    # ]
+    queries = [
+        supabase.table("exam_podstawowy_3p").select("*").limit(1),
+        supabase.table("exam_podstawowy_2p").select("*").limit(1),
+        supabase.table("exam_podstawowy_1p").select("*").limit(1),
+        
+        supabase.table("exam_specjalistyczny_3p").select("*").limit(1),
+        supabase.table("exam_specjalistyczny_2p").select("*").limit(1),
+        supabase.table("exam_specjalistyczny_1p").select("*").limit(1),
+    ]
+    
+    questions_line = []
+
+    for query in queries:
+        results = execute_query(query).model_dump()["data"]
+        for result in results:
+            questions_line.append(__parse_answers(result))        
+        
+    
+    return questions_line
+

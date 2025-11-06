@@ -24,11 +24,11 @@ class QuestionsManagerABC(ABC):
     question_sent_time: float | None = None
     
     @abstractmethod
-    def provide_question(self) -> dict:
+    def provide_question(self) -> tuple[str, dict]:
         ...
         
     @abstractmethod
-    def handle_answer(self) -> dict:
+    def handle_answer(self) -> dict | str:
         ...
     
 
@@ -38,7 +38,7 @@ class PracticeManager(QuestionsManagerABC):
         self.client_id = client_data['client_id']
         self.prepare_questions_line()
 
-    def provide_question(self) -> dict:
+    def provide_question(self) -> tuple[str, dict]:
         is_inserting_hard = self.should_insert_hard_question()
         hard_questions = self.client_data["practice_hard_questions"]
         
@@ -58,10 +58,10 @@ class PracticeManager(QuestionsManagerABC):
         self.response_span = observability.tracer.start_span("quiz-practice-response", attributes={"client_id": self.client_id, "question_index": question_index})
         self.question_sent_time = time.time()
         
-        observability.client_logger.info(f"Sending censored question_index={question_index} question_data='{json.dumps(question_data)}' for client_id={self.client_id}")
+        observability.client_logger.info(f"Sending censored mode=practice question_index={question_index} question_data='{json.dumps(question_data)}' for client_id={self.client_id}")
         del question_data["correct_answer"]
     
-        return question_data
+        return ("QUESTION_DATA", question_data)
     
     def handle_answer(self, answer: str):
         question_index = self.current_question['index']
@@ -81,7 +81,7 @@ class PracticeManager(QuestionsManagerABC):
                 observability.client_logger.debug(f"Correctly answered question_index={question_index} was marked as HARD by client_id={self.client_id}. Unmarking...")
                 self.client_data['practice_hard_questions'] = database.unmark_as_hard_question(self.client_data, question_index)
     
-            observability.client_logger.info(f"Correct answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
+            observability.client_logger.info(f"Correct mode=practice answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
             observability.CORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
             self.response_span.end()
 
@@ -97,7 +97,7 @@ class PracticeManager(QuestionsManagerABC):
                 observability.client_logger.debug(f"Inorrectly answered question_index={question_index} is being marked as HARD by client_id={self.client_id}. Marking...")
                 self.client_data['practice_hard_questions'] = database.mark_as_hard_question(self.client_data, question_index)
     
-            observability.client_logger.info(f"Incorrect answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
+            observability.client_logger.info(f"Incorrect mode=practice answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
             observability.INCORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
             self.response_span.end()
 
@@ -125,4 +125,74 @@ class PracticeManager(QuestionsManagerABC):
 
 
 class ExamManager(QuestionsManagerABC):
-    pass
+    def __init__(self, client_data: dict) -> None:
+        self.client_data = client_data
+        self.client_id = client_data['client_id']
+        self.questions_line = database.generate_exam_line()
+
+        self.line_index = 0
+        self.points = 0
+        self.incorrect = []
+        self.start_time = time.time()
+        
+    def provide_question(self) -> tuple[str, dict]:
+        if self.line_index > len(self.questions_line) - 1:
+            # total_time_s = time.time() - self.start_time  # New metric
+            # is_passed = self.points >= 68 # New metric
+            # self.points # Metric for poitns
+            return (
+                "EXAM_FINISH",
+                self.prepare_exam_result()  
+            )
+            
+        question_data = self.questions_line[self.line_index]
+
+        self.current_question = question_data.copy()
+        self.response_span = observability.tracer.start_span("quiz-exam-response", attributes={"client_id": self.client_id, "question_index": question_data['index']})
+        self.question_sent_time = time.time()
+        
+        observability.client_logger.info(f"Sending censored mode=exam question_index={question_data['index']} question_data='{json.dumps(question_data)}' for client_id={self.client_id}")
+        del question_data["correct_answer"]
+        question_data['number'] = self.line_index + 1
+        self.line_index += 1
+
+        return ("QUESTION_DATA", question_data)
+    
+    def handle_answer(self, answer: str) -> str:
+        question_index = self.current_question['index']
+        
+        # Observability.
+        self.response_span.add_event("Received response", attributes={"answer": answer, "question_index": question_index})
+        answering_time = time.time() - self.question_sent_time
+        observability.TOTAL_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
+        observability.TIME_ANSWERING.labels(question_index=question_index, client_id=self.client_id).observe(answering_time)
+        
+        # Correct answer.
+        if answer == self.current_question['correct_answer']:
+            observability.client_logger.info(f"Correct mode=exam answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
+            observability.CORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
+            self.response_span.end()
+            
+            self.points += self.current_question['points']
+            
+        # Incorrect answer.
+        else:
+            observability.client_logger.info(f"Incorrect mode=exam answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
+            observability.INCORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
+            self.response_span.end()
+            
+            question_data_dump = self.current_question.copy()
+            question_data_dump['client_answer'] = answer
+            
+            self.incorrect.append(question_data_dump)
+
+        return "OK"
+        
+    def prepare_exam_result(self) -> dict:
+        is_passed = self.points >= 68
+
+        return {
+            "result": is_passed,
+            "points": self.points,
+            "incorrect": self.incorrect
+        }

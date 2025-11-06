@@ -8,9 +8,9 @@ export function App() {
 
   return (
     <>
-      <TopPanel/>
+      <TopPanel startExam={() => {setExam(true)}}/>
       {
-        isExam ? <ExamQuizLoop/> : <PracticeQuizLoop/>
+        isExam ? <ExamQuizLoop onEnd={() => {setExam(false)}}/> : <PracticeQuizLoop/>
       }
     </>
   )

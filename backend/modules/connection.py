@@ -14,6 +14,7 @@ class EventHeader(StrEnum):
     CHECK_ANSWER = "CHECK_ANSWER"
     ANSWER_VALIDATION = "ANSWER_VALIDATION"
     SET_CLIENT_ID = "SET_CLIENT_ID"
+    EXAM_FINISH = "EXAM_FINISH"
 
 
 def ws_response(event: EventHeader, data: dict | str | None) -> dict:
@@ -72,8 +73,8 @@ class WebSocketHandler:
         
         match event:
             case EventHeader.GET_QUESTION:
-                question_data = self.manager.provide_question()
-                return await self.ws_client.send_json(ws_response(EventHeader.QUESTION_DATA, question_data))
+                event_header, question_data = self.manager.provide_question()
+                return await self.ws_client.send_json(ws_response(event_header, question_data))
 
             case EventHeader.CHECK_ANSWER:
                 validation_response = self.manager.handle_answer(content)

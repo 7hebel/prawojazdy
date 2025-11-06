@@ -29,6 +29,15 @@ async def measure_response_time(request: Request, call_next):
         with observability.tracer.start_as_current_span(tracking_id + "-endpoint"):
             return await call_next(request)
 
+
+@api.get("/")
+async def get_home() -> Response:
+    return Response("200")
+
+@api.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 @api.get("/media/{media_name}")
 async def static_media(media_name: str, request: Request) -> Response:
     path = "../media/" + media_name
@@ -40,10 +49,6 @@ async def static_media(media_name: str, request: Request) -> Response:
         observability.api_logger.info(f"Accessing media: medianame={media_name} from: client_host={request.client.host}")
         return Response(file.read(), media_type="video/mp4")
 
-@api.get("/")
-async def get_home() -> Response:
-    return Response("200")
-
 @api.get("/test-result/{result}")
 async def get_test_result(result: str) -> Response:
     """ Increment metrics based on the result from the test process """
@@ -51,11 +56,6 @@ async def get_test_result(result: str) -> Response:
         observability.PASSED_TESTS.inc()
     if result == "fail":
         observability.FAILED_TESTS.inc()
-
-
-@api.get("/metrics")
-async def metrics():
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @api.websocket("/ws/{mode}/{client_id}")
 async def ws_quiz_loop(mode: str, ws_client: WebSocket, client_id: str) -> None:
