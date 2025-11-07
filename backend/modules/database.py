@@ -106,23 +106,14 @@ def generate_exam_line() -> list[dict]:
         - 2x 1p.
     """
     
-    # queries = [
-    #     supabase.table("exam_podstawowy_3p").select("*").limit(10),
-    #     supabase.table("exam_podstawowy_2p").select("*").limit(6),
-    #     supabase.table("exam_podstawowy_1p").select("*").limit(4),
-        
-    #     supabase.table("exam_specjalistyczny_3p").select("*").limit(6),
-    #     supabase.table("exam_specjalistyczny_2p").select("*").limit(4),
-    #     supabase.table("exam_specjalistyczny_1p").select("*").limit(2),
-    # ]
     queries = [
-        supabase.table("exam_podstawowy_3p").select("*").limit(1),
-        supabase.table("exam_podstawowy_2p").select("*").limit(1),
-        supabase.table("exam_podstawowy_1p").select("*").limit(1),
+        supabase.table("exam_podstawowy_3p").select("*").limit(10),
+        supabase.table("exam_podstawowy_2p").select("*").limit(6),
+        supabase.table("exam_podstawowy_1p").select("*").limit(4),
         
-        supabase.table("exam_specjalistyczny_3p").select("*").limit(1),
-        supabase.table("exam_specjalistyczny_2p").select("*").limit(1),
-        supabase.table("exam_specjalistyczny_1p").select("*").limit(1),
+        supabase.table("exam_specjalistyczny_3p").select("*").limit(6),
+        supabase.table("exam_specjalistyczny_2p").select("*").limit(4),
+        supabase.table("exam_specjalistyczny_1p").select("*").limit(2),
     ]
     
     questions_line = []

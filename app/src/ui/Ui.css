@@ -30,6 +30,7 @@
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
+    position: relative;
     transition: background-color .4s, transform .1s, box-shadow .1s, filter .2s;
 }
 
@@ -67,6 +68,7 @@
     cursor: pointer;
     transition: background-color .1s, outline .1s, filter .2s;
     width: 100%;
+    position: relative;
 }
 
 .abc-answer-group:hover {
@@ -108,12 +110,12 @@
 .button-timer-container {
     width: 100%;
     border: 1px solid #5f5f5f29;
-    box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 10%, 21%);
+    box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 13%, 25%);
     color: white;
     background-color: hsl(var(--h-shift), 12%, 29%);
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    gap: 8px;
     padding: 12px;
     border-radius: 4px;
     font-family: var(--font-ui);
@@ -346,4 +348,23 @@
     padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid #ffffff0c;
+}
+
+.kbd-shortcut {
+    position: absolute;
+    right: 8px;
+    padding: 4px 8px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 12px;
+    font-weight: 400;
+    display: inline-block;
+    border: 1px solid #616161;
+    border-radius: 4px;
+    margin: 0 0.2em;
+    box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #555 inset;
+    background: linear-gradient(180deg, #555, #dddbdb4d);
+    font-family: var(--font-ui);
+    color: white;
+    align-self: center;
 }

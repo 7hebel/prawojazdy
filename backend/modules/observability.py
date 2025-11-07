@@ -9,9 +9,6 @@ import logging
 import os
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
 class LogsEnrichment(logging.Filter):
     def filter(self, record):
         span = trace.get_current_span()
@@ -23,6 +20,24 @@ class LogsEnrichment(logging.Filter):
             record.trace_id = None
             record.span_id = None
         return True
+
+
+class ColoredLogsFormatter(logging.Formatter):
+    reset = "\x1b[0m"
+    format = "%(levelname)s | %(asctime)s - %(message)s \033[90m(%(filename)s:%(lineno)d)"
+
+    FORMATS = {
+        logging.DEBUG: "\033[36m" + format + reset,
+        logging.INFO: "\033[34m" + format + reset,
+        logging.WARNING: "\033[33m" + format + reset,
+        logging.ERROR: "\033[31m" + format + reset,
+        logging.CRITICAL: "\033[35m" + format + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, "%H:%M:%S")
+        return formatter.format(record)
 
 
 def __get_logger(name: str) -> logging.Logger:
@@ -38,6 +53,11 @@ def __get_logger(name: str) -> logging.Logger:
     logger.setLevel(logging.DEBUG)
     logger.addFilter(LogsEnrichment())
     logger.addHandler(loki_logs_handler)
+    
+    ch = logging.StreamHandler()
+    ch.setFormatter(ColoredLogsFormatter())
+    logger.addHandler(ch)
+    
     return logger
 
 def __get_tracer() -> trace.Tracer:
@@ -101,5 +121,29 @@ PASSED_TESTS = Gauge(
 FAILED_TESTS = Gauge(
     "tests_failed",
     "Total failed tests amount."
+)
+
+EXAM_PASSED = Gauge(
+    "exam_passed",
+    "Total passed exams",
+    ["client_id"]
+)
+
+EXAM_FAILED = Gauge(
+    "exam_failed",
+    "Total failed exams",
+    ["client_id"]
+)
+
+EXAM_TOTAL_TIME = Summary(
+    "exam_total_time_seconds",
+    "Time spent resolving the entire exam.",
+    ["client_id"]
+) 
+
+EXAM_POINTS = Summary(
+    "exam_points",
+    "Amount of points in each exam",
+    ["client_id"]
 )
 

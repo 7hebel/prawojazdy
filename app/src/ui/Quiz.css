@@ -7,7 +7,7 @@
 
 .quiz-container {
     display: grid;
-    grid-template-columns: minmax(0, 70dvw) fit-content(100%);
+    grid-template-columns: minmax(30dvw, 70dvw) fit-content(100%);
     grid-template-rows: auto auto auto;
     grid-column-gap: 8px;
     grid-row-gap: 8px;
@@ -143,14 +143,16 @@
 .practice-progress {
     font-family: var(--font-ui);
     color: hsl(var(--h-shift), 13%, 81%);
-    background-color: hsla(var(--h-shift), 9%, 16%, 56%);
     padding: 6px;
-    border: 1px solid #ffffff15;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     font-size: 12px;
     gap: 6px;
+}
+
+.exam-progress {
+    gap: 12px;
 }
 
 .practice-progress-data {
@@ -200,13 +202,12 @@
     top: 0;
     left: 0;
     width: 100%;
-    background-color: var(--c-primary);
     transition: height .5s;
     z-index: 2;
 }
 
 .next-question-timeout-line {
-    background-color: white;
+    background: linear-gradient(90deg, #fff0, #fff);
     height: 100%;
     top: 0;
     left: 0;
@@ -333,7 +334,7 @@
 }
 
 
-@media only screen and (max-width: 1050px) {
+@media only screen and (max-width: 1150px) {
     .quiz-container {
         padding: 8px !important;
     }

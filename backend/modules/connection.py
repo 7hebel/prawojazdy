@@ -1,7 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
 from enum import StrEnum
-import time
-import json
 
 from modules import observability
 from modules import database
@@ -22,6 +21,8 @@ def ws_response(event: EventHeader, data: dict | str | None) -> dict:
         "event": event,
         "content": data
     }
+
+open_handlers: dict[str, "WebSocketHandler"] = {} 
 
 
 class WebSocketHandler:
@@ -52,6 +53,11 @@ class WebSocketHandler:
     
         self.manager = self.__manager_base(self.client_data)
     
+        if self.client_id in open_handlers:
+            await open_handlers[self.client_id].abort()
+            
+        open_handlers[self.client_id] = self
+    
         await self.ws_client.accept()
         await self.receive()
 
@@ -62,9 +68,7 @@ class WebSocketHandler:
                 observability.client_logger.debug(f"Received WS message from client_id={self.client_id} msg_content='{message}'")
                 with observability.tracer.start_as_current_span(f"ws-{self.mode}-handle-message", attributes={"client_id": self.client_id, "event": message.get("event", "EVENTLESS?")}):
                     await self.handle_message(message)
-
-            except (RuntimeError, WebSocketDisconnect) as error:
-                observability.api_logger.error(f"WS/{self.mode} connection error: {error} with: client_id={self.client_id} from host={self.ws_client.client.host}")
+            except (RuntimeError, WebSocketDisconnect):
                 return
             
     async def handle_message(self, data: dict) -> None:
@@ -79,3 +83,8 @@ class WebSocketHandler:
             case EventHeader.CHECK_ANSWER:
                 validation_response = self.manager.handle_answer(content)
                 return await self.ws_client.send_json(ws_response(EventHeader.ANSWER_VALIDATION, validation_response))
+
+    async def abort(self) -> None:
+        observability.api_logger.warning(f"Abort action was called on WS/{self.mode} connection with client_id={self.client_id} from host={self.ws_client.client.host} Most likely another Handler was created for this client...")
+        if self.ws_client.client_state != WebSocketState.DISCONNECTED:
+            await self.ws_client.close()
