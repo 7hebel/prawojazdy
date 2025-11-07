@@ -15,8 +15,8 @@ function NextQuestionTimeoutAnimation() {
     barRef.current.style.width = "0%";
     void barRef.current.offsetWidth;
 
-    containerRef.current.style.height = "8px";
-    barRef.current.style.width = "102%";
+    containerRef.current.style.height = "6px";
+    barRef.current.style.width = "100%";
 
     const timeout = setTimeout(() => {
       containerRef.current.style.height = "0px";
@@ -328,7 +328,6 @@ function sessionConnectionHandler(mode, setQuestionData, setIsNextQuestionAnim, 
 
     if (event == "EXAM_FINISH") {
       setExamResult(content)
-      // setExamMode(false)
     }
   }
 
@@ -425,7 +424,6 @@ export function ExamQuizLoop({ onEnd }) {
       {
         examResult && (
           <Modal title='Egzamin zakończony' icon={BookCheck}>
-            
             <div className="modal-sep"></div>
             <div className="result-status">
               <div className="entry-row sub-panel">

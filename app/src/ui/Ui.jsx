@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { User, BookCheck, X } from 'lucide-react';
+import { User, BookCheck, X, DoorOpen, Palette } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook'
 import './Ui.css';
 
-import './Ui.css';
-import { User, BookCheck, X, DoorOpen } from 'lucide-react';
 
 function _DepthButtonBase({ text, onClick, className, icon, ref, kbd, ...attrs }) {
   return (
@@ -180,12 +178,14 @@ export function SecondaryActionButton({ text, onClick, ref, icon }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} icon={icon} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
-export function TopPanel({ openAccountView, isExam, setExam }) {
+export function TopPanel({ openAccountView, openThemeView, isExam, setExam }) {
   return (
     <div className='top-panel'>
       <span></span>
       <div className='top-panel-actions'>
         <span onClick={openAccountView}><User className='top-panel-icon'/>Konto</span>
+        <div className='vert-sep'></div>
+        <span onClick={openThemeView}><Palette className='top-panel-icon'/>Motyw</span>
         <div className='vert-sep'></div>
         {
           isExam ? 
@@ -253,8 +253,31 @@ export function Modal({ title, close, icon, children }) {
   ), modalRoot);
 }
 
-export function KeyboardShortcut({ kbd }) {
+export function KeyboardShortcut({ inplace, kbd }) {
   return (
-    <span className='kbd-shortcut'>{kbd}</span>
+    <span className={'kbd-shortcut ' + (inplace? 'kbd-inplace' : '')}>{kbd}</span>
   )
+}
+
+export function ThemeSelector() {
+  const themes = import.meta.env.VITE_THEMES.split(',');
+
+  function select(t) {
+    localStorage.setItem("theme", t);
+    document.querySelector(':root').style.setProperty('--h-shift', t)
+  }
+
+  return (
+    <>
+      <div className='modal-sep'></div>
+      <span className="settings-header">Wybierz motyw:</span>
+      <div className='themes-row'>
+        {
+          themes.map(t => <div className='theme-selector' key={t} style={{backgroundColor: `hsl(${t}, 30%, 50%)`}} onClick={() => {select(t)}}></div>)
+        }
+      </div>
+      <span className='sub-panel info-text'>Motyw możesz zmienić klawiszem <KeyboardShortcut inplace kbd={"m"}/></span>
+    </>
+  )
+
 }

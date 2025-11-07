@@ -1,6 +1,6 @@
 account
 
 store exams history as PASSED/FAILED list with points + date and show like in github activity blocks green/red
-easter egg on wrong answer public/wrong.png (practice only)
 after completing the practice loop, show the message "completed" and reset practice_index, change practice_seed
+easter egg on wrong answer public/wrong.png (practice only)
 dashboard per client_id

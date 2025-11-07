@@ -132,6 +132,7 @@
     background-color: var(--c-sub-panel);
     border: 1px solid #ffffff15;
     border-radius: 4px;
+    box-shadow: 0px 1px 3px 0px #00000036;
 }
 
 .important-text {
@@ -181,7 +182,7 @@
     left: 0px;
     top: 0px;
     height: 100%;
-    background-color: white;
+    background-color: hsl(var(--h-shift), 18%, 76%);
     opacity: 80%;
     border-radius: 4px;
 }
@@ -191,7 +192,7 @@
     right: 0px;
     top: 0px;
     height: 100%;
-    background-color: red;
+    background-color: #ff3535;
     opacity: 30%;
     border-radius: 4px;
 }
@@ -207,12 +208,11 @@
 }
 
 .next-question-timeout-line {
-    background: linear-gradient(90deg, #fff0, #fff);
+    background: linear-gradient(90deg, #fff0, hsl(var(--h-shift), 28%, 74%));
     height: 100%;
     top: 0;
     left: 0;
     position: absolute;
-    border-radius: 0px 8px 8px 0px;
     transition: width 2.5s linear;
 }
 
@@ -374,4 +374,7 @@
         height: 100%;
     }
 
+    .kbd-shortcut {
+        display: none !important;
+    }
 }
