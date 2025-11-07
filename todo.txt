@@ -1,18 +1,19 @@
-exam mode
-default mode=practice, start exam on click, back to practice after exam
-show exam results (popup)
-colored logs
-account
-dashed sep line
-new metric (gauge): exam passed/failed,  exam time,  exam AVG points with,  exam history (a chart with points, threshold at 68)
+keyboard support + list of shortcuts on toppanel:
 
+123 - ABC
+12  - TN
+SPACE - Play/Start
+ENTER - Next  
+
+
+account
+change sep line
+
+colored logs
+new metric (gauge): exam passed/failed,  exam time,  exam AVG points,  exam history (a chart with points, threshold at 68)
 store exams history as PASSED/FAILED list with points + date and show like in github activity blocks green/red
 better exam mode progress bar (split for podstawoy/specjalistczne)
-fix shadow on timer button
-keyboard support + list of shortcuts on toppanel
-themes (choose from toppanel)
-move css colors to vars
 change "no data" to a spinner (loader)
-onboarding message (no account needed, exam mode)
+onboarding message (no account needed, exam mode) -- if no CLIENT_ID set
 easter egg on wrong answer public/wrong.png (practice only)
 after completing the practice loop, show the message "completed" and reset practice_index, change practice_seed

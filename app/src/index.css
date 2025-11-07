@@ -1,11 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Outfit:wght@100..900&family=Quicksand:wght@300..700&display=swap');
 
 :root {
-  --h-shift: 220;
+  --h-shift: 200;
   --font-ui: 'Outfit';
   --font-text: 'Quicksand';
 
   --c-primary: hsl(var(--h-shift), 15%, 43%);
+  
+  --c-panel: hsl(var(--h-shift), 10%, 17%);
+  --c-sub-panel: hsla(var(--h-shift), 9%, 16%, 56%);
+
+  --c-text: hsl(var(--h-shift), 13%, 90%);
+  --c-text-primary: white;
+  --c-text-dim: hsl(var(--h-shift), 13%, 81%);
+
+  --border-big: 2px solid #ffffff17;
+  --border-sm: 1px solid #ffffff15;
 
 }
 
@@ -17,5 +27,5 @@
 body {
   margin: 0;
   padding: 0 !important;
-  background-color: hsl(var(--h-shift), 11%, 14%);
+  background-color: hsl(var(--h-shift), 12%, 11%);
 }

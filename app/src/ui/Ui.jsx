@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './Ui.css';
-import { User, BookCheck, X } from 'lucide-react';
+import { User, BookCheck, X, DoorOpen } from 'lucide-react';
 
 function _DepthButtonBase({ text, onClick, className, icon, ref, ...attrs }) {
   return (
@@ -37,7 +37,6 @@ export function AnswersTN({ questionID, showData }) {
   const optionT = useRef(null);
   const optionN = useRef(null);
   const id = 'answer-' + questionID + (showData ? '-wrong' : '');
-
 
   useEffect(() => {
     if (showData) { 
@@ -166,14 +165,19 @@ export function SecondaryActionButton({ text, onClick, ref }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
-export function TopPanel({ startExam }) {
+export function TopPanel({ isExam, setExam }) {
   return (
     <div className='top-panel'>
       <span></span>
       <div className='top-panel-actions'>
         <span><User className='top-panel-icon'/>Konto</span>
         <div className='vert-sep'></div>
-        <span onClick={startExam}><BookCheck className='top-panel-icon'/>Nowy egzamin</span>
+        {
+          isExam ? 
+            <span onClick={() => {setExam(false)}}><DoorOpen className='top-panel-icon'/>Opuść egzamin</span>
+          :
+            <span onClick={() => {setExam(true)}}><BookCheck className='top-panel-icon'/>Nowy egzamin</span>
+        }
       </div>
     </div>
   )

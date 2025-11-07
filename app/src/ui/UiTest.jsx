@@ -22,15 +22,8 @@ export default function UiTest() {
       <div className='row'>
         <ButtonTimer
           text="Dalej"
-          seconds={10}
+          seconds={60}
           onClick={() => {}}
-        />
-        <ButtonTimerSequence 
-          sequence={[
-            {text: "Sequence element 1", seconds: 5, onClick: () => {console.log("Sequence element 1")}},
-            {text: "Sequence element 2", seconds: 5, onClick: () => {console.log("Sequence element 2")}},
-            {text: "Sequence element 3", seconds: 5, onClick: () => {console.log("Sequence element 3")}}
-          ]}
         />
       </div>
 
