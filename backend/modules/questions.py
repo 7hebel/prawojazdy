@@ -137,9 +137,16 @@ class ExamManager(QuestionsManagerABC):
         
     def provide_question(self) -> tuple[str, dict]:
         if self.line_index > len(self.questions_line) - 1:
-            # total_time_s = time.time() - self.start_time  # New metric
-            # is_passed = self.points >= 68 # New metric
-            # self.points # Metric for poitns
+            if self.points >= 68:
+                observability.EXAM_PASSED.labels(client_id=self.client_id).inc()
+            else:
+                observability.EXAM_FAILED.labels(client_id=self.client_id).inc()
+                
+            total_time_s = time.time() - self.start_time  
+            observability.EXAM_TOTAL_TIME.labels(client_id=self.client_id).observe(total_time_s)
+
+            observability.EXAM_POINTS.labels(client_id=self.client_id).observe(self.points)
+            
             return (
                 "EXAM_FINISH",
                 self.prepare_exam_result()  

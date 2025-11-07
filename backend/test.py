@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import requests
+import sys
 import os
 
 import dotenv
@@ -240,12 +241,19 @@ def start_test() -> bool:
     return True
     
 
-if __name__ == "__main__":
+def main():
     is_passed = start_test()
     result = "pass" if is_passed else "fail"
     try:
         requests.get(f"http://localhost:8000/test-result/{result}")
     except:
         observability.test_logger.critical(f"failed to report test result: {result} (API did not accept request)")
+
+
+if __name__ == "__main__":
+    main()
     
+    if "loop" in sys.argv:
+        while True:
+            main()
     

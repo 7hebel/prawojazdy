@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { User, BookCheck, X } from 'lucide-react';
+import { useHotkeys } from 'react-hotkeys-hook'
 import './Ui.css';
-import { User, BookCheck, X, DoorOpen } from 'lucide-react';
 
-function _DepthButtonBase({ text, onClick, className, icon, ref, ...attrs }) {
+
+function _DepthButtonBase({ text, onClick, className, icon, ref, kbd, ...attrs }) {
   return (
     <button
       className={"ui-btn-depth " + className}
@@ -12,18 +14,20 @@ function _DepthButtonBase({ text, onClick, className, icon, ref, ...attrs }) {
       ref={ref}
       {...attrs}
     >
-      {text}
+      {kbd && <KeyboardShortcut kbd={kbd}/>}
       {icon}
+      {text}
     </button>
   )
 }
 
-function _AnswerOptionTN({ answerValue, isSelected, selectSetter, ref }) {
+function _AnswerOptionTN({ answerValue, isSelected, selectSetter, ref, kbd }) {
   const text = (answerValue == "T")? "Tak" : "Nie";
   return (
     <_DepthButtonBase
       text={text}
       ref={ref}
+      kbd={kbd}
       id={'possible-answer-' + answerValue}
       onClick={() => { selectSetter(answerValue) }}
       className={'answer-option ' + (isSelected? 'selected-answer' : '')}
@@ -37,6 +41,7 @@ export function AnswersTN({ questionID, showData }) {
   const optionT = useRef(null);
   const optionN = useRef(null);
   const id = 'answer-' + questionID + (showData ? '-wrong' : '');
+
 
   useEffect(() => {
     if (showData) { 
@@ -59,15 +64,16 @@ export function AnswersTN({ questionID, showData }) {
       className='answers-tn-container'
       id={id}
       answer={selected}>
-        <_AnswerOptionTN key={id + 't'} ref={optionT} answerValue='T' isSelected={selected=='T'} selectSetter={onSelectHandler()}/>
-        <_AnswerOptionTN key={id + 'n'} ref={optionN} answerValue='N' isSelected={selected=='N'} selectSetter={onSelectHandler()}/>
+        <_AnswerOptionTN key={id + 't'} kbd="1" ref={optionT} answerValue='T' isSelected={selected=='T'} selectSetter={onSelectHandler()}/>
+        <_AnswerOptionTN key={id + 'n'} kbd="2" ref={optionN} answerValue='N' isSelected={selected=='N'} selectSetter={onSelectHandler()}/>
     </div>
   )
 }
 
-function _AnswerOptionABC({ answerValue, answerContent, isSelected, selectSetter, ref }) {
+function _AnswerOptionABC({ answerValue, answerContent, isSelected, selectSetter, ref, kbd }) {
   return (
     <div id={'possible-answer-' + answerValue} ref={ref} className={'abc-answer-group ' + (isSelected? "selected-abc-answer" : "") } onClick={() => {selectSetter(answerValue)}}>
+      { kbd && <KeyboardShortcut kbd={kbd}/>}
       <div className='abc-answer-value'>{answerValue}</div>
       <div className='abc-answer-content'>{answerContent}</div>
     </div>
@@ -82,6 +88,10 @@ export function AnswersABC({ questionID, answers, showData }) {
     B: useRef(null),
     C: useRef(null),
   }
+
+  useHotkeys('1', () => options.A.current.click());
+  useHotkeys('2', () => options.B.current.click());
+  useHotkeys('3', () => options.C.current.click());
 
   useEffect(() => {
     if (showData) {
@@ -101,15 +111,15 @@ export function AnswersABC({ questionID, answers, showData }) {
       id={id}
       answer={selected}
     >
-      <_AnswerOptionABC key={id + 'A'} ref={options.A} answerValue='A' answerContent={answers['A']} isSelected={selected=='A'} selectSetter={onSelectHandler()} />
-      <_AnswerOptionABC key={id + 'B'} ref={options.B} answerValue='B' answerContent={answers['B']} isSelected={selected=='B'} selectSetter={onSelectHandler()} />
-      <_AnswerOptionABC key={id + 'C'} ref={options.C} answerValue='C' answerContent={answers['C']} isSelected={selected=='C'} selectSetter={onSelectHandler()} />
+      <_AnswerOptionABC key={id + 'A'} kbd="1" ref={options.A} answerValue='A' answerContent={answers['A']} isSelected={selected=='A'} selectSetter={onSelectHandler()} />
+      <_AnswerOptionABC key={id + 'B'} kbd="2" ref={options.B} answerValue='B' answerContent={answers['B']} isSelected={selected=='B'} selectSetter={onSelectHandler()} />
+      <_AnswerOptionABC key={id + 'C'} kbd="3" ref={options.C} answerValue='C' answerContent={answers['C']} isSelected={selected=='C'} selectSetter={onSelectHandler()} />
     </div>
   )
 }
 
 
-export function ButtonTimer({ text, seconds, onClick, ref, seqnum, paused }) {
+export function ButtonTimer({ text, seconds, onClick, ref, seqnum, paused, kbd }) {
   const [timer, setTimer] = useState(0);
   const [remaining, setRemaining] = useState(seconds);
   const intervalRef = useRef();
@@ -144,6 +154,7 @@ export function ButtonTimer({ text, seconds, onClick, ref, seqnum, paused }) {
 
   return (
     <div className='button-timer-container' onClick={handleClick} ref={ref} seqnum={seqnum}>
+      { kbd && <KeyboardShortcut kbd={kbd}/> }
       <span>{text}</span>
       <span className='button-timer-s'>{remaining}s</span>
       <div className='button-timer-passed' style={{ width: (timer / seconds) * 100 + "%" }}></div>
@@ -154,23 +165,23 @@ export function ButtonTimer({ text, seconds, onClick, ref, seqnum, paused }) {
 
 export function ButtonTimerSequence({ sequence, ref, index, paused }) {
   const current = sequence[index];
-  return <ButtonTimer seqnum={index} ref={ref} key={index} text={current.text} seconds={current.seconds} paused={paused} onClick={current.onClick}></ButtonTimer>
+  return <ButtonTimer seqnum={index} ref={ref} key={index} kbd={current.kbd} text={current.text} seconds={current.seconds} paused={paused} onClick={current.onClick}></ButtonTimer>
 }
 
-export function PrimaryActionButton({ text, onClick, ref, className, id, icon }) {
-  return <_DepthButtonBase ref={ref} id={id} className={'action-button ' + (className ?? '')} text={text} onClick={onClick} icon={icon}></_DepthButtonBase>
+export function PrimaryActionButton({ text, onClick, ref, className, id, icon, kbd }) {
+  return <_DepthButtonBase ref={ref} id={id} className={'action-button ' + (className ?? '')} text={text} onClick={onClick} icon={icon} kbd={kbd}></_DepthButtonBase>
 }
 
-export function SecondaryActionButton({ text, onClick, ref }) {
-  return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} text={text} onClick={onClick}></_DepthButtonBase>
+export function SecondaryActionButton({ text, onClick, ref, icon }) {
+  return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} icon={icon} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
-export function TopPanel({ isExam, setExam }) {
+export function TopPanel({ startExam }) {
   return (
     <div className='top-panel'>
       <span></span>
       <div className='top-panel-actions'>
-        <span><User className='top-panel-icon'/>Konto</span>
+        <span onClick={openAccountView}><User className='top-panel-icon'/>Konto</span>
         <div className='vert-sep'></div>
         {
           isExam ? 
@@ -238,3 +249,8 @@ export function Modal({ title, close, icon, children }) {
   ), modalRoot);
 }
 
+export function KeyboardShortcut({ kbd }) {
+  return (
+    <span className='kbd-shortcut'>{kbd}</span>
+  )
+}

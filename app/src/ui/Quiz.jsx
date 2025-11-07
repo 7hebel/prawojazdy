@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton, Modal } from "./Ui";
-import { BadgeQuestionMark, ArrowRight, BookCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton, Modal, SecondaryActionButton } from "./Ui";
+import { BadgeQuestionMark, ArrowRight, BookCheck, ChevronLeft, ChevronRight, ArrowLeft, ArrowRightCircle } from 'lucide-react';
+import { useHotkeys } from 'react-hotkeys-hook'
 import './Quiz.css'
 import './Ui.css'
 
@@ -14,7 +15,7 @@ function NextQuestionTimeoutAnimation() {
     barRef.current.style.width = "0%";
     void barRef.current.offsetWidth;
 
-    containerRef.current.style.height = "12px";
+    containerRef.current.style.height = "8px";
     barRef.current.style.width = "102%";
 
     const timeout = setTimeout(() => {
@@ -49,8 +50,8 @@ function PracticeProgress({ questionNumber, hardQuestions }) {
         </span>
       </div>
       <div className="practice-progress-bar-container">
-        <div className="practice-progress-bar-fill" style={{ width: progressPercentage + "%"}}></div>
-        <div className="practice-progress-bar-fill-hard" style={{width: hardPercentage + "%"}}></div>
+        <div className="practice-progress-bar-fill" style={{ width: progressPercentage + "%" }}></div>
+        <div className="practice-progress-bar-fill-hard" style={{ width: hardPercentage + "%" }}></div>
       </div>
       <span className="practice-progress-hard-count">Błędy: {hardQuestions}</span>
     </div>
@@ -58,20 +59,36 @@ function PracticeProgress({ questionNumber, hardQuestions }) {
 }
 
 function ExamProgress({ questionNumber }) {
-  const totalQuestions = 32;
-  const progressPercentage = Math.round((questionNumber / totalQuestions) * 100);
+  const basicQuestions = (questionNumber > 20) ? 20 : questionNumber;
+  const basicProgress = (basicQuestions / 20) * 100;
+  
+  const specQuestions = (questionNumber > 20) ? questionNumber - 20 : 0;
+  const specProgress = (specQuestions / 12) * 100;
 
   return (
-    <div className="practice-progress">
-      <div className="practice-progress-data">
-        <span className="important-text">{progressPercentage}%</span>
-        <span>
-          <span className="important-text">{questionNumber}</span>
-          /{totalQuestions}
-        </span>
+    <div className="practice-progress exam-progress">
+      <div className="practice-progress">
+        <div className="practice-progress-data">
+          <span className="important-text">Podstawowe</span>
+          <span>
+            <span className="important-text">{basicQuestions}</span>/20
+          </span>
+        </div>
+        <div className="practice-progress-bar-container">
+          <div className="practice-progress-bar-fill" style={{ width: basicProgress + "%" }}></div>
+        </div>
       </div>
-      <div className="practice-progress-bar-container">
-        <div className="practice-progress-bar-fill" style={{ width: progressPercentage + "%" }}></div>
+
+      <div className="practice-progress">
+        <div className="practice-progress-data">
+          <span className="important-text">Specjalistyczne</span>
+          <span>
+            <span className="important-text">{specQuestions}</span>/12
+          </span>
+        </div>
+        <div className="practice-progress-bar-container">
+          <div className="practice-progress-bar-fill" style={{ width: specProgress + "%" }}></div>
+        </div>
       </div>
     </div>
   )
@@ -109,7 +126,12 @@ function QuestionMedia({ mediaType, src, ref, id, vidAutoplay }) {
 }
 
 export function Quiz({ questionData, isExamMode, onContinue }) {
-  if (questionData == null) { return <h1>no data</h1> }
+  if (questionData == null) { return (
+    <div className="loader-container">
+      <div className="loader"></div> 
+    </div>
+    )
+  }
 
   const mediaType = getMediaType(questionData.media_name);
   const mediaSrc = (mediaType != "NOMEDIA") ? import.meta.env.VITE_API + "media/" + questionData.media_name : "nomedia.png"
@@ -118,12 +140,12 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
   if (isExamMode) {
     if (questionData.category == "PODSTAWOWY") {
       actionButtonsSequence = [
-        { text: "Start", seconds: 20, onClick: () => { startBasicQuestion() }},
-        { text: "Dalej", seconds: 15, onClick: () => { setSeqBtnPause(false); onContinue(getSelectedAnswer()) } },
+        { text: "Start", seconds: 20, kbd: 'Space', onClick: () => { startBasicQuestion() }},
+        { text: "Dalej", seconds: 15, kbd: 'Enter', onClick: () => { setSeqBtnPause(false); onContinue(getSelectedAnswer()); actionbtn.current.disabled = true; } },
       ]
     } else {
       actionButtonsSequence = [
-        { text: "Dalej", seconds: 50, onClick: () => { onContinue(getSelectedAnswer()) } },
+        { text: "Dalej", seconds: 50, kbd: 'Enter', onClick: () => { onContinue(getSelectedAnswer()) } },
       ]
     }
   }
@@ -154,6 +176,8 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
   }
 
   useEffect(() => {
+    actionbtn.current.disabled = false;
+
     if (!isExamMode) {
       if (mediaType == "IMAGE" || mediaType == "NOMEDIA") {
         unblurMedia();
@@ -209,11 +233,15 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
   function onPracticeNext(ev) {
     if (getSelectedAnswer().length) {
       onContinue(getSelectedAnswer());
+      actionbtn.current.disabled = true;
     } else {
       ev.target.classList.add("error-animation");
       setTimeout(() => {ev.target.classList.remove("error-animation")}, 501)
     }
   }
+
+  useHotkeys('space', () => startBasicQuestion());
+  useHotkeys('enter', () => actionbtn.current.click());
 
   return (
     <main id="quiz-view" question_index={questionData.index}>
@@ -244,7 +272,7 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
             isExamMode? 
               <ButtonTimerSequence ref={actionbtn} sequence={actionButtonsSequence} index={seqBtnIndex} paused={seqBtnPaused}></ButtonTimerSequence>
             :
-              <PrimaryActionButton ref={actionbtn} id='continue-btn' text="Dalej" icon={<ArrowRight className="icon icon-light"/>} onClick={onPracticeNext}></PrimaryActionButton>
+              <PrimaryActionButton ref={actionbtn} id='continue-btn' kbd={"Enter"} text="Dalej" onClick={onPracticeNext}></PrimaryActionButton>
           }
         </div>
         <div className="quiz-panel question-panel">
@@ -368,12 +396,17 @@ export function ExamQuizLoop({ onEnd }) {
   const [examResultWrongAnswer, setExamResultWrongAnswer] = useState(0);
   const key = questionData?.index;
 
-  useEffect(() => {
+  function setupConnection() {
     setWSConn(sessionConnectionHandler("exam", setQuestionData, setIsNextQuestionAnim, setExamResult))
-  }, [])
+  }
 
+  useEffect(() => {setupConnection()}, [])
+
+  let _has_checked_question = false;
   async function checkAnswer(answer) {
+    if (_has_checked_question) return;
     await WSConn.send(JSON.stringify({ "event": "CHECK_ANSWER", "content": answer }))
+    _has_checked_question = true
   }
 
   function endExam() {
@@ -381,11 +414,18 @@ export function ExamQuizLoop({ onEnd }) {
     onEnd();
   }
 
+  function restartExam() {
+    setExamResult(false);
+    setQuestionData(null);
+    setupConnection();
+  }
+
   return (
     <>
       {
         examResult && (
-          <Modal title='Egzamin zakończony' icon={BookCheck} close={endExam}>
+          <Modal title='Egzamin zakończony' icon={BookCheck}>
+            
             <div className="modal-sep"></div>
             <div className="result-status">
               <div className="entry-row sub-panel">
@@ -421,6 +461,11 @@ export function ExamQuizLoop({ onEnd }) {
                 {<ExamWrongAnswer questionData={examResult.incorrect[examResultWrongAnswer]}/>}
               </div>  
               
+              <div className="modal-sep"></div>
+              <div className="row-right">
+                <PrimaryActionButton text="Powrót" icon={<ArrowLeft className="icon icon-light"/>} onClick={endExam}></PrimaryActionButton>
+                <PrimaryActionButton text="Nowy Egzamin" icon={<BookCheck className="icon icon-light"/>} onClick={restartExam}></PrimaryActionButton>
+              </div>
             </div>
           </Modal>
         )
