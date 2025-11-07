@@ -5,6 +5,8 @@ import { User, BookCheck, X } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook'
 import './Ui.css';
 
+import './Ui.css';
+import { User, BookCheck, X, DoorOpen } from 'lucide-react';
 
 function _DepthButtonBase({ text, onClick, className, icon, ref, kbd, ...attrs }) {
   return (
@@ -42,6 +44,8 @@ export function AnswersTN({ questionID, showData }) {
   const optionN = useRef(null);
   const id = 'answer-' + questionID + (showData ? '-wrong' : '');
 
+  useHotkeys('1', () => optionT.current.click());
+  useHotkeys('2', () => optionN.current.click());
 
   useEffect(() => {
     if (showData) { 
@@ -176,7 +180,7 @@ export function SecondaryActionButton({ text, onClick, ref, icon }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} icon={icon} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
-export function TopPanel({ startExam }) {
+export function TopPanel({ openAccountView, isExam, setExam }) {
   return (
     <div className='top-panel'>
       <span></span>
