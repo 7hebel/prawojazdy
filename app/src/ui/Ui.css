@@ -23,7 +23,7 @@
     padding: 4px 8px;
     background-color: hsl(var(--h-shift), 12%, 30%);
     border: var(--border-big);
-    box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 16%, 22%);
+    box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 16%, 22%), 0px 0px 8px 0px #ffffff1f inset;
     border-radius: 4px;
     color: var(--c-text-dim);
     font-family: var(--font-ui);
@@ -69,6 +69,7 @@
     transition: background-color .1s, outline .1s, filter .2s;
     width: 100%;
     position: relative;
+    box-shadow: 0px 0px 12px 0px hsla(var(--h-shift), 28%, 29.4%, 0.3);
 }
 
 .abc-answer-group:hover {
@@ -86,6 +87,7 @@
     text-align: center;
     font-weight: 600;
     transition: background-color .1s, outline .1s;
+    box-shadow: 0px 2px 4px 0px #ffffff21 inset;
 }
 
 .abc-answer-content {
@@ -159,7 +161,8 @@
 .action-button {
     background-color: var(--c-primary);
     box-shadow: 0px 5px 0px 0px hsl(var(--h-shift), 17%, 28%),
-        0px 0px 12px 0px hsla(var(--h-shift), 41%, 51%, 0.36);
+        0px 0px 12px 0px hsla(var(--h-shift), 41%, 51%, 0.36),
+        0px 0px 8px 0px #ffffff28 inset;
     padding: 8px;
     font-size: 16px;
     font-weight: 600;
@@ -192,7 +195,7 @@
     padding-top: 12px;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: end;
 }
 
 .top-panel-actions {
@@ -375,6 +378,10 @@
     position: relative !important;
     right: auto !important;
     margin: 2px 4px;
+}
+
+.kbd-bottom {
+    bottom: 0px !important;
 }
 
 .settings-header {

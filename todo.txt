@@ -1,6 +1,11 @@
-account
+accounts on frontend
 
-store exams history as PASSED/FAILED list with points + date and show like in github activity blocks green/red
+on exam mode, space replays video!
+
+preload next media on practice?
+
+store exams history as PASSED/FAILED list with points + date and show IN ACCOUNT VIEW like in github activity blocks green/red
+
 after completing the practice loop, show the message "completed" and reset practice_index, change practice_seed
 easter egg on wrong answer public/wrong.png (practice only)
 dashboard per client_id

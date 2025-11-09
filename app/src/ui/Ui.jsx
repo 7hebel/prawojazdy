@@ -181,7 +181,6 @@ export function SecondaryActionButton({ text, onClick, ref, icon }) {
 export function TopPanel({ openAccountView, openThemeView, isExam, setExam }) {
   return (
     <div className='top-panel'>
-      <span></span>
       <div className='top-panel-actions'>
         <span onClick={openAccountView}><User className='top-panel-icon'/>Konto</span>
         <div className='vert-sep'></div>
@@ -253,9 +252,11 @@ export function Modal({ title, close, icon, children }) {
   ), modalRoot);
 }
 
-export function KeyboardShortcut({ inplace, kbd }) {
+export function KeyboardShortcut({ inplace, bottom, kbd }) {
+  const className = 'kbd-shortcut ' + (inplace ? 'kbd-inplace ' : '') + (bottom ? 'kbd-bottom ' : '');
+  
   return (
-    <span className={'kbd-shortcut ' + (inplace? 'kbd-inplace' : '')}>{kbd}</span>
+    <span className={className}>{kbd}</span>
   )
 }
 

@@ -10,6 +10,7 @@ from modules import observability
 
 try:
     from modules import database
+    from modules import accounts
 except Exception as e:
     observability.test_logger.critical(f"Failed to establish connection with database: {e}")
     exit()
@@ -75,7 +76,7 @@ def test_custom_test_client() -> bool:
     test_client_id = os.getenv("TEST_CLIENT_ID")
     
     try:
-        client_data = database.get_client(test_client_id)
+        client_data = accounts.get_client_by_id(test_client_id)
     except Exception as e:
         observability.test_logger.critical(f"Failed to fetch test-client-id={test_client_id} data from database. {e}")
         return False
@@ -95,7 +96,7 @@ def test_custom_test_client() -> bool:
     )
     observability.test_logger.info(f"Set test client's practice_index to default (0)...")
 
-    client_data = database.get_client(test_client_id)
+    client_data = accounts.get_client_by_id(test_client_id)
     if client_data["practice_index"] != 0:
         observability.test_logger.critical(f"Validating recent practice_index = 0 change failed. Found practice_index={client_data['practice_index']}")
         return False

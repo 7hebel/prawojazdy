@@ -3,8 +3,9 @@ from fastapi.websockets import WebSocketState
 from enum import StrEnum
 
 from modules import observability
-from modules import database
 from modules import questions
+from modules import accounts
+from modules import database
 
 
 class EventHeader(StrEnum):
@@ -35,7 +36,7 @@ class WebSocketHandler:
 
     async def initialize(self):
         if self.client_id != "anon":
-            client_data = database.get_client(self.client_id)
+            client_data = accounts.get_client_by_id(self.client_id)
             if client_data:
                 self.client_data = client_data
             else:
@@ -43,13 +44,13 @@ class WebSocketHandler:
                 self.client_id = "anon"
         
         if self.client_id == "anon":
-            self.client_id = database.create_anonymous_client()
+            self.client_id = accounts.create_anonymous_client()
             
             observability.client_logger.info(f"Created anonymous account for client_host={self.ws_client.client.host} with client_id={self.client_id}")
             observability.api_logger.info(f"Associated client_host={self.ws_client.client.host} connection with generated client_id={self.client_id}. Informing client...")
     
             await self.ws_client.send_json(ws_response(EventHeader.SET_CLIENT_ID, self.client_id))
-            self.client_data = database.get_client(self.client_id)
+            self.client_data = accounts.get_client_by_id(self.client_id)
     
         self.manager = self.__manager_base(self.client_data)
     

@@ -1,3 +1,4 @@
+bcrypt
 supabase
 fastapi
 uvicorn

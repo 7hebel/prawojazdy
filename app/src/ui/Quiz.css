@@ -185,6 +185,7 @@
     background-color: hsl(var(--h-shift), 18%, 76%);
     opacity: 80%;
     border-radius: 4px;
+    box-shadow: 0px 0px 6px 1px var(--c-primary);
 }
 
 .practice-progress-bar-fill-hard {
@@ -376,5 +377,9 @@
 
     .kbd-shortcut {
         display: none !important;
+    }
+
+    .top-panel {
+        justify-content: center;
     }
 }

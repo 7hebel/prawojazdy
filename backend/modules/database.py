@@ -1,7 +1,5 @@
 from supabase import create_client, Client
 import postgrest
-import random
-import uuid
 import os
 
 from modules import observability
@@ -74,24 +72,6 @@ def unmark_as_hard_question(client_data: dict, question_index: int) -> list[int]
     )
     
     return current_hard
-
-def create_anonymous_client() -> str:
-    client_id = str(uuid.uuid4())
-    execute_query(supabase.table("Clients").insert({
-        "client_id": client_id,
-        "is_anon": True,
-        "practice_seed": random.randint(1, 2_147_483_647) # int4 max
-    }))
-
-    return client_id
-
-
-def get_client(client_id: str) -> dict | None:
-    clients_data = execute_query(supabase.table("Clients").select("*").eq("client_id", client_id)).model_dump()["data"]
-    if not clients_data:
-        return
-    return clients_data[0]
-
 
 def generate_exam_line() -> list[dict]:
     """  

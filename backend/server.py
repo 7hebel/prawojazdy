@@ -2,6 +2,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi import FastAPI, Response, WebSocket, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import uvicorn
 import dotenv
 import os
@@ -11,6 +12,7 @@ dotenv.load_dotenv(".env")
 from modules import observability
 from modules import connection
 from modules import questions
+from modules import accounts
 
 
 api = FastAPI()
@@ -28,6 +30,15 @@ async def measure_response_time(request: Request, call_next):
     with observability.REQUEST_TIME_METRICS.labels(endpoint=tracking_id).time():
         with observability.tracer.start_as_current_span(tracking_id + "-endpoint"):
             return await call_next(request)
+
+def api_response(status: bool, content: str | dict | None = None) -> JSONResponse:
+    status_code = 200 if status else 400
+    observability.api_logger.debug(f"Sending API Response status_code={status_code} content={content}")
+        
+    return JSONResponse({
+        "status": status,
+        "content": content
+    }, status_code)
 
 
 @api.get("/")
@@ -68,6 +79,57 @@ async def ws_quiz_loop(mode: str, ws_client: WebSocket, client_id: str) -> None:
     questions_manager = questions.get_questions_manager_base(mode)
     await connection.WebSocketHandler(client_id, ws_client, mode, questions_manager).initialize()
         
+@api.post("/account/register")
+async def post_account_register(data: accounts.AccountRegisterModel, request: Request) -> JSONResponse:
+    if len(data.username) < 5:
+        return api_response(False, "Zbyt krótka nazwa użytkownika.")
+    if len(data.username) > 32:
+        return api_response(False, "Zbyt długa nazwa użytkownika.")
+    if len(data.password) < 3:
+        return api_response(False, "Zbyt krótkie hasło.")
+
+    if accounts.get_client_by_name(data.username) is not None:
+        return api_response(False, "Ta nazwa użytkownika jest już zajęta.")
+
+    iphash = accounts.hash_ip(request.client.host)
+    status = accounts.register_account(data.client_id, data.username, data.password, iphash)
+
+    if not status:
+        return api_response(False, "Rejestracja nie powiodła się.")
+    return api_response(True)
+        
+@api.post("/account/login")
+async def post_account_login(data: accounts.AccountLoginModel, request: Request) -> JSONResponse:
+    iphash = accounts.hash_ip(request.client.host)
+
+    if not accounts.login_account(data.username, data.password, iphash):
+        return api_response(False, "Nieprawidłowa nazwa użytkownika lub hasło.")
+
+    account = accounts.get_client_by_name(data.username)
+    return api_response(True, account['client_id'])
+
+@api.get("/account/validate-session/{client_id}")
+async def get_account_validate_session(client_id: str = None, request: Request = None) -> JSONResponse:
+    if not client_id:
+        observability.client_logger.warning(f"client tried to validate session with no client_id set by iphash={iphash}")
+        return api_response(False)
+    
+    iphash = accounts.hash_ip(request.client.host)
+    account = accounts.get_client_by_id(client_id)
+    
+    if iphash not in account['logged_ips']:
+        observability.client_logger.warning(f"session validation failed for client_id={client_id} by iphash={iphash}")
+        return api_response(False)
+
+    observability.client_logger.info(f"successfull session validation for client_id={client_id} by iphash={iphash}")
+    return api_response(True, {"username": account['name']})
+
+@api.get("/account/logout/{client_id}")
+async def get_account_logout(client_id: str, request: Request) -> JSONResponse:
+    iphash = accounts.hash_ip(request.client.host)
+    accounts.logout(client_id, iphash)
+    return api_response(True)
+
         
 if __name__ == "__main__":
     FastAPIInstrumentor.instrument_app(api)

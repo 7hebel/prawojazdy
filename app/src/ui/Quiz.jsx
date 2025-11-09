@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton, Modal, SecondaryActionButton } from "./Ui";
-import { BadgeQuestionMark, ArrowRight, BookCheck, ChevronLeft, ChevronRight, ArrowLeft, ArrowRightCircle } from 'lucide-react';
+import { AnswersABC, AnswersTN, ButtonTimerSequence, PrimaryActionButton, Modal, KeyboardShortcut } from "./Ui";
+import { BadgeQuestionMark, BookCheck, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook'
 import './Quiz.css'
 import './Ui.css'
