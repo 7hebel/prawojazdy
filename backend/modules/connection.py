@@ -5,7 +5,6 @@ from enum import StrEnum
 from modules import observability
 from modules import questions
 from modules import accounts
-from modules import database
 
 
 class EventHeader(StrEnum):
@@ -35,6 +34,8 @@ class WebSocketHandler:
         self.__manager_base = manager_base
 
     async def initialize(self):
+        await self.ws_client.accept()
+        
         if self.client_id != "anon":
             client_data = accounts.get_client_by_id(self.client_id)
             if client_data:
@@ -59,7 +60,6 @@ class WebSocketHandler:
             
         open_handlers[self.client_id] = self
     
-        await self.ws_client.accept()
         await self.receive()
 
     async def receive(self) -> None:

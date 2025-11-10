@@ -188,6 +188,12 @@
     max-height: 16px;
 }
 
+.icon-black {
+    color: #00000081;
+    max-height: 16px;
+    pointer-events: none;
+}
+
 
 .top-panel {
     width: 100%;
@@ -425,3 +431,114 @@
     margin-block: 4px;
 }
 
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-label {
+    font-family: var(--font-ui);
+    color: var(--c-text-dim);
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity .1s;
+    opacity: 0.8;
+    padding-left: 2px;
+    position: relative;
+    white-space: nowrap;
+    margin-block: 6px;
+}
+
+.input-label > svg {
+    opacity: .5;
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    margin-bottom: 1px;
+    margin-right: 6px;
+}
+
+.input-element {
+    all: unset;
+    border: 1px solid #ffffff15;
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: var(--c-text);
+    background-color: #ffffff11;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 400;
+    transition: background-color .4s;
+    resize: vertical;
+}
+
+input::placeholder {
+    opacity: 0.5;
+    font-size: 0.8rem;
+}
+
+.input-element:invalid {
+    border-color: rgba(255, 108, 108, 0.397);
+}
+
+.input-element:focus {
+    background-color: #d3d0ff13;
+}
+
+.input-element:invalid:focus {
+    background-color: #ff000033;
+}
+
+.input-group:has(.input-element:focus) > .input-label {
+    opacity: 1;
+}
+
+.input-group:has(.input-element:invalid) > .input-label {
+    color: rgba(255, 159, 159, 0.753);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.form-button {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 4px 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    transition: background-color .2s, filter .2s;
+    margin-block: 8px 4px;
+    cursor: pointer;
+}
+
+.form-primary-button {
+    background-color: #ffffffbd;
+    border: 1px solid white;
+    color: black;
+}
+
+.form-primary-button:hover {
+    background-color: white;
+}
+
+.form-secondary-button {
+    border: 1px solid #ffffff26;
+    background-color: #8282824d;
+    color: white;
+}
+
+.form-secondary-button:hover {
+    filter: brightness(1.2);
+}

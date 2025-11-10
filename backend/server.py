@@ -96,7 +96,7 @@ async def post_account_register(data: accounts.AccountRegisterModel, request: Re
 
     if not status:
         return api_response(False, "Rejestracja nie powiodła się.")
-    return api_response(True)
+    return api_response(True, status)
         
 @api.post("/account/login")
 async def post_account_login(data: accounts.AccountLoginModel, request: Request) -> JSONResponse:
@@ -107,6 +107,11 @@ async def post_account_login(data: accounts.AccountLoginModel, request: Request)
 
     account = accounts.get_client_by_name(data.username)
     return api_response(True, account['client_id'])
+        
+@api.get("/account/check-username/{username}")
+async def post_account_login(username: str, request: Request) -> JSONResponse:
+    is_account = accounts.get_client_by_name(username) is not None
+    return api_response(is_account)
 
 @api.get("/account/validate-session/{client_id}")
 async def get_account_validate_session(client_id: str = None, request: Request = None) -> JSONResponse:
@@ -116,6 +121,10 @@ async def get_account_validate_session(client_id: str = None, request: Request =
     
     iphash = accounts.hash_ip(request.client.host)
     account = accounts.get_client_by_id(client_id)
+    
+    if account is None:
+        observability.client_logger.warning(f"session validation failed for client_id={client_id} by iphash={iphash} (account not found)")
+        return api_response(False)
     
     if iphash not in account['logged_ips']:
         observability.client_logger.warning(f"session validation failed for client_id={client_id} by iphash={iphash}")

@@ -299,7 +299,7 @@ function sessionConnectionHandler(mode, setQuestionData, setIsNextQuestionAnim, 
     throw new Error(`Invalid connection mode: ${mode} use 'exam' or 'practice'`);
   }
   
-  const clientId = localStorage.getItem("CLIENT_ID") ?? "anon";
+  const clientId = localStorage.getItem("client_id") || "anon";
   const ws = new WebSocket(import.meta.env.VITE_API + "ws/" + mode + "/" + clientId);
 
   ws.onmessage = (ev) => {
@@ -312,7 +312,7 @@ function sessionConnectionHandler(mode, setQuestionData, setIsNextQuestionAnim, 
     }
 
     if (event == "SET_CLIENT_ID") {
-      localStorage.setItem("CLIENT_ID", content);
+      localStorage.setItem("client_id", content);
     }
 
     if (event == "ANSWER_VALIDATION") {

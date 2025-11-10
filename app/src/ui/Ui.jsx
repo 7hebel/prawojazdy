@@ -178,6 +178,14 @@ export function SecondaryActionButton({ text, onClick, ref, icon }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} icon={icon} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
+export function FormPrimaryButton({ text, onClick, icon }) {
+  return <button className='form-button form-primary-button' onClick={onClick}>{text}{icon}</button>
+}
+
+export function FormSecondaryButton({ text, onClick, icon }) {
+  return <button className='form-button form-secondary-button' onClick={onClick}>{text}{icon}</button>
+}
+
 export function TopPanel({ openAccountView, openThemeView, isExam, setExam }) {
   return (
     <div className='top-panel'>
@@ -282,3 +290,44 @@ export function ThemeSelector() {
   )
 
 }
+
+
+export function InputGroup({ children }) {
+  return (
+    <div className="input-group">{children}</div>
+  )
+}
+
+export function InputLabel({ children }) {
+  return (
+    <p className="input-label">{children}</p>
+  )
+}
+
+export function Input({ id, type = "text", className, placeholder, value, pattern, minlen, maxlen, onChange, onBlur, ref, min, max, locked, groupName }) {
+  if (pattern == null && type == "number") pattern = "^\d*\.?\d*$";
+  if (pattern == null && type == "email") pattern = "^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$";
+  if (!className) className = '';
+
+  return (
+    <input
+      id={id}
+      type={type}
+      className={"input-element " + className}
+      placeholder={placeholder}
+      pattern={pattern}
+      minLength={minlen}
+      maxLength={maxlen}
+      onChange={onChange}
+      onBlur={onBlur}
+      defaultValue={value}
+      ref={ref}
+      step="any"
+      min={min ?? undefined}
+      max={max ?? undefined}
+      disabled={locked}
+      group={groupName}
+    ></input>
+  )
+}
+

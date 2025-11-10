@@ -1,0 +1,21 @@
+.account-content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px;
+}
+
+.identificaiton-process {
+    padding: 4px;
+}
+
+.identification-step {
+    padding: 2px;
+}
+
+.action-text {
+    font-family: var(--font-ui);
+    color: var(--c-text);
+    margin-block: 4px;
+}
+
