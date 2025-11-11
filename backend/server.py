@@ -82,7 +82,11 @@ async def ws_quiz_loop(mode: str, ws_client: WebSocket, client_id: str) -> None:
     observability.api_logger.info(f"Started WS connection for mode={mode} by client_id={client_id} client_host={ws_client.client.host}")
 
     questions_manager = questions.get_questions_manager_base(mode)
-    await connection.WebSocketHandler(client_id, ws_client, mode, questions_manager).initialize()
+    try:
+        await connection.WebSocketHandler(client_id, ws_client, mode, questions_manager).initialize()
+    except Exception as error:
+        observability.api_logger.warning(f"WS/{mode} initialization for client_id={client_id} failed: {error}")
+    
         
 @api.post("/account/register")
 async def post_account_register(data: accounts.AccountRegisterModel, request: Request) -> JSONResponse:

@@ -159,5 +159,5 @@ def forgotten_anon_accounts_cleaner() -> None:
         time.sleep(60)
 
 
-Thread(target=orphan_connection_handlers_cleaner, daemon=True).start()
-Thread(target=forgotten_anon_accounts_cleaner, daemon=True).start()
+# Thread(target=orphan_connection_handlers_cleaner, daemon=True).start()
+# Thread(target=forgotten_anon_accounts_cleaner, daemon=True).start()

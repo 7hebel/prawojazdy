@@ -184,12 +184,23 @@ async def check_first_loaded_question(page: Page, config: dict) -> bool:
     main_view_locator = await page.wait_for_selector("main#quiz-view")
     loaded_question_index = await main_view_locator.get_attribute("question_index")
 
-    if loaded_question_index != FIRST_QUESTION_INDEX:
+    try:
+        await page.wait_for_function(
+            """
+            (i) => {
+                const el = document.querySelector("main#quiz-view");
+                return el && el.getAttribute("question_index") === i;
+            }
+            """,
+            arg=FIRST_QUESTION_INDEX
+        )
+        observability.test_logger.debug(f"The first question has been correctly loaded (index={FIRST_QUESTION_INDEX})")
+        return True
+    
+    except:
         observability.test_logger.critical(f"client received incorrect question! Expected question: {FIRST_QUESTION_INDEX}, got: {loaded_question_index}. This may happen when: incorrect practice_seed is set (not '3') or the total amount of questions has changed")
         return False
     
-    observability.test_logger.debug(f"The first question has correct index: {FIRST_QUESTION_INDEX}")
-    return True
     
 async def try_continue_without_answer(page: Page, config: dict) -> bool:
     continue_btn = await page.wait_for_selector("#continue-btn")
@@ -237,11 +248,12 @@ def select_answer_and_verify_next_question_builder(answer: str, is_correct: bool
                     return el && el.getAttribute("question_index") == e;
                 }
                 """,
-                arg=next_question_index
+                arg=next_question_index,
+                timeout=10_000
             )
             observability.test_logger.debug(f"The displayed question has successfully changed to desired: {next_question_index} after answer")
         except:
-            observability.test_logger.critical(f"The displayed question has not changed from to desired {next_question_index}")
+            observability.test_logger.critical(f"The displayed question has not changed to desired {next_question_index}")
             return False
         
         # Check if question and all answers are visible on site.

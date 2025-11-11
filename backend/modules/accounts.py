@@ -60,7 +60,7 @@ async def get_client_by_name(username: str) -> dict | None:
         return data[0]
     
 def get_all_anon_and_test_clients() -> list[dict]:
-    query = database._sync_supabase.table("Clients").select("*").or_("is_anon.eq.true,name.like.test%").execute()
+    query = database._sync_supabase.table("Clients").select("*").or_("is_anon.eq.true,name.ilike.test%").execute()
     return query.model_dump()["data"]
 
 async def register_account(client_id: str, username: str, password: str, iphash: str) -> bool | str:

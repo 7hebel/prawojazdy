@@ -1,4 +1,7 @@
-gauge metrics reset after restart: parse output data on /metrics, save it to file, on startup -- load from it
+tests strategy:
+    random tests load (random_load in env and random_load_max_workers and random_load_min_workers)
+    incremental load (run X tests on n_workers load, then X on n_workers+1 load... until max_workers or fail)
+
 
 keyboard support for: start/stop exam (E), after exam scroll wrong asnwers with arrows (<)(>)
 
