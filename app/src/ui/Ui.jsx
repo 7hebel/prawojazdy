@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { User, BookCheck, X, DoorOpen, Palette } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook'
+import { toast, Bounce } from 'react-toastify';
 import './Ui.css';
 
 
@@ -178,19 +179,19 @@ export function SecondaryActionButton({ text, onClick, ref, icon }) {
   return <_DepthButtonBase ref={ref} className={'action-button secondary-action'} icon={icon} text={text} onClick={onClick}></_DepthButtonBase>
 }
 
-export function FormPrimaryButton({ text, onClick, icon }) {
-  return <button className='form-button form-primary-button' onClick={onClick}>{text}{icon}</button>
+export function FormPrimaryButton({ text, onClick, icon, id }) {
+  return <button className='form-button form-primary-button' id={id} onClick={onClick}>{text}{icon}</button>
 }
 
-export function FormSecondaryButton({ text, onClick, icon }) {
-  return <button className='form-button form-secondary-button' onClick={onClick}>{text}{icon}</button>
+export function FormSecondaryButton({ text, onClick, icon, id }) {
+  return <button className='form-button form-secondary-button' id={id} onClick={onClick}>{text}{icon}</button>
 }
 
 export function TopPanel({ openAccountView, openThemeView, isExam, setExam }) {
   return (
     <div className='top-panel'>
       <div className='top-panel-actions'>
-        <span onClick={openAccountView}><User className='top-panel-icon'/>Konto</span>
+        <span id='account-panel' onClick={openAccountView}><User className='top-panel-icon'/>Konto</span>
         <div className='vert-sep'></div>
         <span onClick={openThemeView}><Palette className='top-panel-icon'/>Motyw</span>
         <div className='vert-sep'></div>
@@ -329,5 +330,19 @@ export function Input({ id, type = "text", className, placeholder, value, patter
       group={groupName}
     ></input>
   )
+}
+
+export function infoToast(message) {
+  return toast.info(message, {
+    theme: "dark",
+    transition: Bounce,
+  })
+}
+
+export function errorToast(message) {
+  return toast.error(message, {
+    theme: "dark",
+    transition: Bounce,
+  })
 }
 

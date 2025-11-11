@@ -4,6 +4,7 @@ import { AccountView } from "./ui/Account";
 import { useState } from "react"
 import { User, Palette } from "lucide-react";
 import { useHotkeys } from 'react-hotkeys-hook'
+import { ToastContainer } from 'react-toastify';
 
 export function App() {
   const [isExam, setExam] = useState(false);
@@ -36,6 +37,7 @@ export function App() {
       {
         isExam ? <ExamQuizLoop onEnd={() => {setExam(false)}}/> : <PracticeQuizLoop/>
       }
+      <ToastContainer/>
     </>
   )
 }

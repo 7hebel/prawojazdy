@@ -23,13 +23,17 @@ class QuestionsManagerABC(ABC):
     response_span: observability.trace.Span | None = None 
     question_sent_time: float | None = None
     
+    async def initialize(self) -> None:
+        ...
+    
     @abstractmethod
-    def provide_question(self) -> tuple[str, dict]:
+    async def provide_question(self) -> tuple[str, dict]:
         ...
         
     @abstractmethod
-    def handle_answer(self) -> dict | str:
+    async def handle_answer(self) -> dict | str:
         ...
+    
     
 
 class PracticeManager(QuestionsManagerABC):
@@ -38,7 +42,7 @@ class PracticeManager(QuestionsManagerABC):
         self.client_id = client_data['client_id']
         self.prepare_questions_line()
 
-    def provide_question(self) -> tuple[str, dict]:
+    async def provide_question(self) -> tuple[str, dict]:
         is_inserting_hard = self.should_insert_hard_question()
         hard_questions = self.client_data["practice_hard_questions"]
         
@@ -48,7 +52,7 @@ class PracticeManager(QuestionsManagerABC):
         else:
             question_index = self.questions_line[self.client_data['practice_index']]
             
-        question_data = database.fetch_question(question_index)
+        question_data = await database.fetch_question(question_index)
         question_data['is_hard'] = is_inserting_hard
         
         question_data["number"] = self.client_data['practice_index']
@@ -63,11 +67,11 @@ class PracticeManager(QuestionsManagerABC):
     
         return ("QUESTION_DATA", question_data)
     
-    def handle_answer(self, answer: str):
+    async def handle_answer(self, answer: str):
         question_index = self.current_question['index']
 
         if not self.current_question['is_hard']:
-            self.increment_question_index()
+            await self.increment_question_index()
             
         # Observability.
         self.response_span.add_event("Received response", attributes={"answer": answer, "question_index": question_index})
@@ -79,7 +83,7 @@ class PracticeManager(QuestionsManagerABC):
         if answer == self.current_question['correct_answer']:
             if self.current_question["is_hard"]:
                 observability.client_logger.debug(f"Correctly answered question_index={question_index} was marked as HARD by client_id={self.client_id}. Unmarking...")
-                self.client_data['practice_hard_questions'] = database.unmark_as_hard_question(self.client_data, question_index)
+                self.client_data['practice_hard_questions'] = await database.unmark_as_hard_question(self.client_data, question_index)
     
             observability.client_logger.info(f"Correct mode=practice answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
             observability.CORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
@@ -95,7 +99,7 @@ class PracticeManager(QuestionsManagerABC):
         else:
             if not self.current_question["is_hard"]:
                 observability.client_logger.debug(f"Inorrectly answered question_index={question_index} is being marked as HARD by client_id={self.client_id}. Marking...")
-                self.client_data['practice_hard_questions'] = database.mark_as_hard_question(self.client_data, question_index)
+                self.client_data['practice_hard_questions'] = await database.mark_as_hard_question(self.client_data, question_index)
     
             observability.client_logger.info(f"Incorrect mode=practice answer={answer} for question_index={question_index} by client_id={self.client_id} answering took time={answering_time} seconds")
             observability.INCORRECT_ANSWERS.labels(question_index=question_index, client_id=self.client_id).inc()
@@ -112,9 +116,9 @@ class PracticeManager(QuestionsManagerABC):
         random.Random(self.client_data['practice_seed']).shuffle(self.questions_line)  # Thread-safe
         observability.client_logger.debug(f"Shuffled questions for client_id={self.client_id} with seed={self.client_data['practice_seed']}. The questions line starts with: shuffled_line='{self.questions_line[:3]}'")
 
-    def increment_question_index(self) -> None:
+    async def increment_question_index(self) -> None:
         self.client_data['practice_index'] += 1
-        database.set_practice_index(self.client_id, self.client_data['practice_index'])
+        await database.set_practice_index(self.client_id, self.client_data['practice_index'])
         observability.client_logger.info(f"Incremented practice_index={self.client_data['practice_index']} for client_id={self.client_id}")
 
     def should_insert_hard_question(self) -> bool:
@@ -128,14 +132,17 @@ class ExamManager(QuestionsManagerABC):
     def __init__(self, client_data: dict) -> None:
         self.client_data = client_data
         self.client_id = client_data['client_id']
-        self.questions_line = database.generate_exam_line()
 
+        self.questions_line = []
         self.line_index = 0
         self.points = 0
         self.incorrect = []
         self.start_time = time.time()
         
-    def provide_question(self) -> tuple[str, dict]:
+    async def initialize(self) -> None:
+        self.questions_line = await database.generate_exam_line()
+        
+    async def provide_question(self) -> tuple[str, dict]:
         if self.line_index > len(self.questions_line) - 1:
             if self.points >= 68:
                 observability.EXAM_PASSED.labels(client_id=self.client_id).inc()
@@ -165,7 +172,7 @@ class ExamManager(QuestionsManagerABC):
 
         return ("QUESTION_DATA", question_data)
     
-    def handle_answer(self, answer: str) -> str:
+    async def handle_answer(self, answer: str) -> str:
         question_index = self.current_question['index']
         
         # Observability.

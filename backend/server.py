@@ -60,14 +60,15 @@ async def static_media(media_name: str, request: Request) -> Response:
         observability.api_logger.info(f"Accessing media: medianame={media_name} from: client_host={request.client.host}")
         return Response(file.read(), media_type="video/mp4")
 
-@api.get("/test-result/{result}")
-async def get_test_result(result: str) -> Response:
+@api.get("/test-result/{result}/{total_time}/{n_workers}")
+async def get_test_result(result: str, total_time: float, n_workers: int) -> Response:
     """ Increment metrics based on the result from the test process """
     if result == "pass":
         observability.PASSED_TESTS.inc()
+        observability.TEST_TIME.labels(n_workers=n_workers).observe(total_time)
     if result == "fail":
         observability.FAILED_TESTS.inc()
-
+        
 @api.websocket("/ws/{mode}/{client_id}")
 async def ws_quiz_loop(mode: str, ws_client: WebSocket, client_id: str) -> None:
     if mode not in ("practice", "exam"):
@@ -88,11 +89,11 @@ async def post_account_register(data: accounts.AccountRegisterModel, request: Re
     if len(data.password) < 3:
         return api_response(False, "Zbyt krótkie hasło.")
 
-    if accounts.get_client_by_name(data.username) is not None:
+    if await accounts.get_client_by_name(data.username) is not None:
         return api_response(False, "Ta nazwa użytkownika jest już zajęta.")
 
     iphash = accounts.hash_ip(request.client.host)
-    status = accounts.register_account(data.client_id, data.username, data.password, iphash)
+    status = await accounts.register_account(data.client_id, data.username, data.password, iphash)
 
     if not status:
         return api_response(False, "Rejestracja nie powiodła się.")
@@ -102,15 +103,15 @@ async def post_account_register(data: accounts.AccountRegisterModel, request: Re
 async def post_account_login(data: accounts.AccountLoginModel, request: Request) -> JSONResponse:
     iphash = accounts.hash_ip(request.client.host)
 
-    if not accounts.login_account(data.username, data.password, iphash):
+    if not await accounts.login_account(data.username, data.password, iphash):
         return api_response(False, "Nieprawidłowa nazwa użytkownika lub hasło.")
 
-    account = accounts.get_client_by_name(data.username)
+    account = await accounts.get_client_by_name(data.username)
     return api_response(True, account['client_id'])
         
 @api.get("/account/check-username/{username}")
 async def post_account_login(username: str, request: Request) -> JSONResponse:
-    is_account = accounts.get_client_by_name(username) is not None
+    is_account = await accounts.get_client_by_name(username) is not None
     return api_response(is_account)
 
 @api.get("/account/validate-session/{client_id}")
@@ -120,7 +121,7 @@ async def get_account_validate_session(client_id: str = None, request: Request =
         return api_response(False)
     
     iphash = accounts.hash_ip(request.client.host)
-    account = accounts.get_client_by_id(client_id)
+    account = await accounts.get_client_by_id(client_id)
     
     if account is None:
         observability.client_logger.warning(f"session validation failed for client_id={client_id} by iphash={iphash} (account not found)")
@@ -136,7 +137,7 @@ async def get_account_validate_session(client_id: str = None, request: Request =
 @api.get("/account/logout/{client_id}")
 async def get_account_logout(client_id: str, request: Request) -> JSONResponse:
     iphash = accounts.hash_ip(request.client.host)
-    accounts.logout(client_id, iphash)
+    await accounts.logout(client_id, iphash)
     return api_response(True)
 
         

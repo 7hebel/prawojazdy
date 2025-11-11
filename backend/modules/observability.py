@@ -113,6 +113,12 @@ TIME_ANSWERING = Summary(
     ["question_index", "client_id"]
 )
 
+TEST_TIME = Summary(
+    "tests_total_time",
+    "Total time spent on tests sequence, per n_worker's.",
+    ["n_workers"]
+)
+
 PASSED_TESTS = Gauge(
     "tests_passed",
     "Total completly passed test sequences amount."

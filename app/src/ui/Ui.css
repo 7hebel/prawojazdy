@@ -542,3 +542,16 @@ input[type=number] {
 .form-secondary-button:hover {
     filter: brightness(1.2);
 }
+
+:root {
+    --toastify-color-dark: var(--c-panel);
+    --toastify-toast-shadow: 0px 2px 4px 0px #0000003b;
+    --toastify-font-family: var(--font-ui);
+    --toastify-toast-offset: 24px;
+    --toastify-text-color-dark: var(--c-text);
+}
+
+.Toastify__toast {
+    font-size: 14px !important;
+    border: var(--border-sm);
+}

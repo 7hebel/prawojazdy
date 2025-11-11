@@ -212,10 +212,12 @@ export function Quiz({ questionData, isExamMode, onContinue }) {
       if (actionbtn.current.getAttribute("seqnum") == "0") actionbtn.current.click();
     }
     if (mediaType == "VIDEO") {
+      if (isExamMode && mediaelement.current.getAttribute("hasplayed") == "1") return
+      
       setSeqBtnIndex(1)
       setSeqBtnPause(true)
 
-      mediaelement.current.addEventListener("ended", () => { setSeqBtnPause(false) })
+      mediaelement.current.addEventListener("ended", () => { setSeqBtnPause(false); mediaelement.current.setAttribute("hasplayed", "1") })
       mediaelement.current.play()
       .then(e => {
         unblurMedia();

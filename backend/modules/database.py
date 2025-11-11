@@ -1,5 +1,6 @@
-from supabase import create_client, Client
+from supabase import acreate_client, AsyncClient, create_client, Client
 import postgrest
+import asyncio
 import os
 
 from modules import observability
@@ -7,14 +8,25 @@ from modules import observability
 
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+supabase: AsyncClient | None = None
+_sync_supabase: Client = create_client(url, key)
+
+async def get_supabase():  
+    global supabase
+    if supabase is None:
+        supabase = await acreate_client(url, key)  
+    return supabase
+
+asyncio.get_event_loop().run_until_complete(get_supabase())
 
 
-def execute_query(query: postgrest.SyncRequestBuilder) -> postgrest.APIResponse:
+async def execute_query(query: postgrest.AsyncRequestBuilder) -> postgrest.APIResponse:
     try:
-        return query.execute()
+        return await query.execute()
     except postgrest.APIError as query_error:
         observability.db_logger.error(f"Request error: {query_error} ({query_error._raw_error})")
+    except Exception as error:
+        observability.db_logger.error(f"Unkown db query error: {error}")
 
 
 def __parse_answers(question_data: dict) -> dict:
@@ -35,45 +47,45 @@ def __parse_answers(question_data: dict) -> dict:
     return question_data
 
 
-def fetch_question(index: int) -> dict:
+async def fetch_question(index: int) -> dict:
     query = supabase.table("Questions").select("*").eq("index", index)
-    response = execute_query(query)
+    response = await execute_query(query)
     question_row = response.model_dump()["data"][0]
     return __parse_answers(question_row)
 
 
-def set_practice_index(client_id: str, index: int) -> None:
-    execute_query(
+async def set_practice_index(client_id: str, index: int) -> None:
+    await execute_query(
         supabase.table("Clients").update({"practice_index": index}).eq("client_id", client_id)
     )
 
-def mark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
+async def mark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
     current_hard = client_data["practice_hard_questions"]
     client_id = client_data["client_id"]
     if question_index in current_hard:
         return current_hard
     
     new_hard_list = current_hard + [question_index]
-    execute_query(
+    await execute_query(
         supabase.table("Clients").update({"practice_hard_questions": new_hard_list}).eq("client_id", client_id)
     )
     
     return new_hard_list
     
-def unmark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
+async def unmark_as_hard_question(client_data: dict, question_index: int) -> list[int]:
     current_hard = client_data["practice_hard_questions"]
     client_id = client_data["client_id"]
     if question_index not in current_hard:
         return current_hard
     
     current_hard.remove(question_index)
-    execute_query(
+    await execute_query(
         supabase.table("Clients").update({"practice_hard_questions": current_hard}).eq("client_id", client_id)
     )
     
     return current_hard
 
-def generate_exam_line() -> list[dict]:
+async def generate_exam_line() -> list[dict]:
     """  
     20 questions from "PODSTAWOWY" set:
         - 10x 3p.
@@ -99,7 +111,8 @@ def generate_exam_line() -> list[dict]:
     questions_line = []
 
     for query in queries:
-        results = execute_query(query).model_dump()["data"]
+        query = await execute_query(query)
+        results = query.model_dump()["data"]
         for result in results:
             questions_line.append(__parse_answers(result))        
         

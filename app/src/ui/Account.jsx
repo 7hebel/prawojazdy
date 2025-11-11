@@ -1,21 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
 import './Account.css';
-import { InputGroup, InputLabel, Input, FormPrimaryButton, FormSecondaryButton } from './Ui';
-import { ArrowRight, DoorOpen, LockKeyholeIcon, User } from 'lucide-react';
+import { InputGroup, InputLabel, Input, FormPrimaryButton, FormSecondaryButton, errorToast } from './Ui';
+import { ArrowRight, LockKeyholeIcon, User } from 'lucide-react';
 
 
 async function loadAndValidateSession() {
   if (!localStorage.getItem("client_id")) {
     return false;
   }
-  
   const req = await fetch(import.meta.env.VITE_API + "account/validate-session/" + (localStorage.getItem("client_id") || ''));
   const resp = await req.json();
   
   if (resp.status == true) {
     localStorage.setItem("username", resp.content.username)
   }
-
   return resp.status
 }
 
@@ -30,7 +28,12 @@ function IdentificationProcess({ close }) {
   if (username === null) {
     function handleUsername() {
       const input_username = document.getElementById("account-username").value;
-      if (input_username.length < 3 || input_username.length > 32) return;
+      if (input_username.length < 5) {
+        return errorToast("Zbyt krótka nazwa użytkownika.");
+      }
+      if (input_username.length > 32) {
+        return errorToast("Zbyt długa nazwa użytkownika.");
+      }
 
       (async () => {
         const req = await fetch(import.meta.env.VITE_API + "account/check-username/" + input_username);
@@ -47,7 +50,7 @@ function IdentificationProcess({ close }) {
           <Input id='account-username' placeholder={'nazwa_użytkownika'} minlen={5} maxlen={32}></Input>
         </InputGroup>
         <div className='row-right'>
-          <FormPrimaryButton onClick={handleUsername} text={'Dalej'} icon={<ArrowRight className='icon-black'/>}/>
+          <FormPrimaryButton id='accept-username' onClick={handleUsername} text={'Dalej'} icon={<ArrowRight className='icon-black'/>}/>
         </div>
       </div>
     )
@@ -56,7 +59,7 @@ function IdentificationProcess({ close }) {
   if (isLogin) {
     function handleLogin() {
       const input_pwd = passwordEl.current.value;
-      if (input_pwd.length < 5) return;
+      if (input_pwd.length < 5) return errorToast("Zbyt krótkie hasło.");
 
       (async () => {
         const req = await fetch(import.meta.env.VITE_API + "account/login", {
@@ -69,7 +72,7 @@ function IdentificationProcess({ close }) {
         });
         
         const resp = await req.json();
-        if (resp.status == false) return;
+        if (resp.status == false) return errorToast(resp.content);
 
         const clientId = resp.content;
         localStorage.setItem("client_id", clientId);
@@ -86,11 +89,11 @@ function IdentificationProcess({ close }) {
         </span>
         <InputGroup>
           <InputLabel><LockKeyholeIcon />Hasło</InputLabel>
-          <Input ref={passwordEl} placeholder={'*****'} minlen={5} type="password"></Input>
+          <Input ref={passwordEl} placeholder={'*****'} minlen={5} type="password" id='login-password'></Input>
         </InputGroup>
         <div className='row-right'>
           <FormSecondaryButton onClick={() => {setUsername(null)}} text={'Powrót'} />
-          <FormPrimaryButton onClick={handleLogin} text={'Zaloguj się'} icon={<ArrowRight className='icon-black' />} />
+          <FormPrimaryButton id='login-button' onClick={handleLogin} text={'Zaloguj się'} icon={<ArrowRight className='icon-black' />} />
         </div>
       </div>
     )
@@ -100,8 +103,8 @@ function IdentificationProcess({ close }) {
     function handleRegister() {
       const input_pwd = passwordEl.current.value;
       const input_repeat_pwd = passwordRepeatEl.current.value;
-      if (input_pwd.length < 5) return;
-      if (input_pwd != input_repeat_pwd) return
+      if (input_pwd.length < 5) return errorToast("Zbyt krótkie hasło.");
+      if (input_pwd != input_repeat_pwd) return errorToast("Hasła nie są identyczne.");
 
       (async () => {
         const req = await fetch(import.meta.env.VITE_API + "account/register", {
@@ -115,7 +118,7 @@ function IdentificationProcess({ close }) {
         });
 
         const resp = await req.json();
-        if (resp.status == false) return;
+        if (resp.status == false) return errorToast(resp.content);
 
         const clientId = resp.content;
         localStorage.setItem("client_id", clientId);
@@ -132,15 +135,15 @@ function IdentificationProcess({ close }) {
         </span>
         <InputGroup>
           <InputLabel><LockKeyholeIcon />Hasło</InputLabel>
-          <Input ref={passwordEl} placeholder={'*****'} minlen={5} type="password"></Input>
+          <Input id='register-password' ref={passwordEl} placeholder={'*****'} minlen={5} type="password"></Input>
         </InputGroup>
         <InputGroup>
           <InputLabel><LockKeyholeIcon />Powtórz hasło</InputLabel>
-          <Input ref={passwordRepeatEl} placeholder={'*****'} minlen={5} type="password"></Input>
+          <Input id='register-password-repeat' ref={passwordRepeatEl} placeholder={'*****'} minlen={5} type="password"></Input>
         </InputGroup>
         <div className='row-right'>
           <FormSecondaryButton onClick={() => { setUsername(null) }} text={'Powrót'} />
-          <FormPrimaryButton onClick={handleRegister} text={'Zarejestruj się'} icon={<ArrowRight className='icon-black' />} />
+          <FormPrimaryButton id="register-button" onClick={handleRegister} text={'Zarejestruj się'} icon={<ArrowRight className='icon-black' />} />
         </div>
       </div>
     )
@@ -169,24 +172,23 @@ function AnonAccount({ close }) {
 function UserAccount({}) {
   function logout() {
     (async () => {
-      const req = await fetch(import.meta.env.VITE_API + "account/logout/" + localStorage.getItem('client_id'));
-      const resp = await req.json();
-
+      const clientId = localStorage.getItem('client_id');
       localStorage.setItem("client_id", '');
       localStorage.setItem("username", '');
+
+      await fetch(import.meta.env.VITE_API + "account/logout/" + clientId);
+
       close(false);
       location.reload();
     })();
   }
-
-  
   return (
     <div className='account-content-container'>
       <div className='modal-sep'></div>
       <p className='action-text'>Jesteś zalogowany jako: </p>
       <p className='info-text sub-panel'><b>{localStorage.getItem('username')}</b></p>
       <div className='modal-sep'></div>
-      <FormSecondaryButton onClick={logout} text={"Wyloguj się"} icon={<ArrowRight className='icon'/>}></FormSecondaryButton>
+      <FormSecondaryButton id='logout-button' onClick={logout} text={"Wyloguj się"} icon={<ArrowRight className='icon'/>}></FormSecondaryButton>
     </div>
   )
 }

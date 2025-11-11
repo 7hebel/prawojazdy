@@ -1,6 +1,6 @@
-+ toasts for login/register process errors?
+test_failed/_passed are reset after restart
 
-on exam mode, space replays video!
+keyboard support for: start/stop exam (E), after exam scroll wrong asnwers with arrows (<)(>)
 
 preload next media on practice?
 
