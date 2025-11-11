@@ -105,7 +105,7 @@ class TestsRunner:
         while True:
             await self.__run_single_webtest_sequence()
             
-    def __report_result(self, result: bool, total_time: float) -> None:
+    def __report_result(self, result: bool, total_time: float = 0) -> None:
         result = "pass" if result else "fail"
         try:
             requests.get(f"http://localhost:8000/test-result/{result}/{total_time}/{self.n_workers}")

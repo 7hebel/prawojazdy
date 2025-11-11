@@ -2,3 +2,4 @@ media/
 backend/.env
 backend/modules/__pycache__/
 todo.txt
+lgtm/export.json

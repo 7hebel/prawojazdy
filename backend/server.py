@@ -9,10 +9,13 @@ import os
 
 dotenv.load_dotenv(".env")
 
+from modules import metrics_persistance
 from modules import observability
 from modules import connection
 from modules import questions
 from modules import accounts
+
+metrics_persistance.import_metrics()
 
 
 api = FastAPI()
@@ -47,6 +50,7 @@ async def get_home() -> Response:
 
 @api.get("/metrics")
 async def metrics():
+    metrics_persistance.export_metrics()
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @api.get("/media/{media_name}")

@@ -1,0 +1,26 @@
+{
+  "python_info": [
+    [
+      {
+        "version": "3.13.5",
+        "implementation": "CPython",
+        "major": "3",
+        "minor": "13",
+        "patchlevel": "5"
+      },
+      1
+    ]
+  ],
+  "tests_passed": [
+    [
+      {},
+      0.0
+    ]
+  ],
+  "tests_failed": [
+    [
+      {},
+      0.0
+    ]
+  ]
+}

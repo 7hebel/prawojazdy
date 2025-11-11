@@ -1,4 +1,4 @@
-test_failed/_passed are reset after restart
+gauge metrics reset after restart: parse output data on /metrics, save it to file, on startup -- load from it
 
 keyboard support for: start/stop exam (E), after exam scroll wrong asnwers with arrows (<)(>)
 
