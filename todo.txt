@@ -10,3 +10,36 @@ preload next media on practice?
 after completing the practice loop, show the message "completed" and reset practice_index, change practice_seed
 easter egg on wrong answer public/wrong.png (practice only)
 dashboard per client_id
+
+
+---
+
+
+prezentacja:
+    - aplikacja (b. krtoko) -- zbieranie danych
+    - po co to robilismy, (nie -- co zrobilismy)
+
+    - do czego uzywałem traceow/logow
+    - porownanie logow i traceow
+    - co mi daja te dane
+
+
+istqb - certyfikacja 
+cv - playwright
+
+
+
+0. Początek.
+    - Dokumenty: przekazanie informacji o postawieniu stacku LGTM (pl)
+                 websockety (eng)
+
+1. Aplikacja
+    - po co zbudowałem tą aplikację? Nauka, źródło danych
+    - aplikacja w liczbach: jakie dane zbieram (observability.py)
+    
+2. Dane
+    - pokaz dashboardów -- omówienie, co wynika z tych danych (3)
+
+3. Uwagi dot. logów i trace'ów
+
+
