@@ -36,7 +36,10 @@ def export_metrics() -> None:
 
 def import_metrics() -> None:
     with open(EXPORT_FILE_PATH, "r") as file:
-        data = json.load(file)
+        raw_data = file.read()
+        if not raw_data:
+            raw_data = "{}"
+        data = json.loads(raw_data)
 
     for metric_id, samples in data.items():
         metric: Gauge = REGISTRY._names_to_collectors.get(metric_id)

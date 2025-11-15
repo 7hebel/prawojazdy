@@ -244,7 +244,6 @@ def select_answer_and_verify_next_question_builder(answer: str, is_correct: bool
                 """
                 (e) => {
                     const el = document.querySelector("main#quiz-view");
-                    console.log(el.getAttribute("question_index"));
                     return el && el.getAttribute("question_index") == e;
                 }
                 """,

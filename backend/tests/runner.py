@@ -1,5 +1,6 @@
 from playwright.async_api import async_playwright
 from collections.abc import Callable
+from enum import StrEnum
 import requests
 import asyncio
 import logging
@@ -9,6 +10,11 @@ import os
 from modules import observability
 from tests import interface
 
+
+class _TestsStrategy(StrEnum):
+    LINEAR = "linear"
+    INCREMENTAL = "incremental"
+    
 
 class TestsRunner:
     """
@@ -22,19 +28,29 @@ class TestsRunner:
         self.web_tests = web_tests
         self.config_generator = config_generator
         
+        self.strategy = os.getenv("strategy") or _TestsStrategy.LINEAR
+        if self.strategy not in _TestsStrategy:
+            observability.test_logger.warning(f"invalid TestRunner configuration: strategy={self.strategy} is not a valid strategy (using: linear)")
+            self.strategy = _TestsStrategy.LINEAR
+        
         self.n_workers = int(os.getenv("n_workers")) or 1
-        self.on_fail = os.getenv("on_fail") or "exit"
+        self.on_fail = os.getenv("on_fail")
         if self.on_fail not in ("exit", "continue"):
             observability.test_logger.warning(f"invalid TestRunner configuration: on_fail={self.on_fail} is not one of: exit/continue (using: exit)")
+            self.on_fail = "exit"
+
         self.loop = os.getenv("loop") == "true"
         self.verbose = os.getenv("verbose") == "true"
+        self.inc_test_per_load = int(os.getenv("inc_tests_per_load")) or 1
 
         interface.clear_screen()
         interface.print_config({
+            "Strategy": self.strategy,
             "Workers": self.n_workers,
             "On fail": self.on_fail,
             "Loop": self.loop,
-            "Verbose": self.verbose
+            "Verbose": self.verbose,
+            "Inc. tests/load": self.inc_test_per_load
         })
         
         if not self.verbose:
@@ -44,6 +60,11 @@ class TestsRunner:
         
     @observability.tracer.start_as_current_span("testing-pre-tests-sequence")
     def __run_pretests(self) -> bool:
+        interface.context_header("🔎 Running environment checks")
+        interface.context_key_value_point("Pre-tests", len(self.pre_tests))
+        interface.context_separator()
+        pretests_start = time.time()
+        
         for n, test in enumerate(self.pre_tests, 1):
             with observability.tracer.start_as_current_span("pre-test", attributes={"pre-test-name": test.__name__}) as pretest_span:
                 try:
@@ -64,9 +85,21 @@ class TestsRunner:
                 else:                    
                     observability.test_logger.info(f"[{n}/{len(self.pre_tests)}] pre-test={test.__name__} FAILED")
                     pretest_span.add_event("fail")
+                    pretest_total_time = time.time() - pretests_start
+
+                    interface.context_separator()
+                    interface.context_message_error("❌ Cannot proceed, checks failed")
+                    interface.context_finish(pretest_total_time)
+
                     return False
 
         observability.test_logger.info(f"All {n} pre-tests passed successfully! Can continue to web-tests...")
+
+        pretest_total_time = time.time() - pretests_start
+        interface.context_separator()
+        interface.context_message_success("🌟 Checks succeeded")
+        interface.context_finish(pretest_total_time)
+
         return True
     
     @observability.tracer.start_as_current_span("testing-web-tests-sequence")
@@ -84,6 +117,7 @@ class TestsRunner:
             engine = playwright.chromium
             browser = await engine.launch()
             page = await browser.new_page()
+            # page.on("console", lambda m: print(m))
             
             for n, test in enumerate(self.web_tests, 1):
                 with observability.tracer.start_as_current_span("web-test", attributes={"web-test-name": test.__name__}) as webtest_span:
@@ -114,26 +148,10 @@ class TestsRunner:
                 interface.context_finish(test_total_time)
             
             return True
-                      
-    async def run(self) -> None:
-        interface.context_header("🔎 Running environment checks")
-        interface.context_key_value_point("Pre-tests", len(self.pre_tests))
-        interface.context_separator()
-        pretests_start = time.time()
-        pretests_status = self.__run_pretests()
-        pretest_total_time = time.time() - pretests_start
-
-        interface.context_separator()
-        if not pretests_status:
-            interface.context_message_error("❌ Cannot proceed, checks failed")
-            interface.context_finish(pretest_total_time)
-            return self.__report_result(False)
-        else:
-            interface.context_message_success("🌟 Checks succeeded")
-            interface.context_finish(pretest_total_time)
-        
+               
+    async def __execute_linear_strategy(self) -> None:
         if self.n_workers > 1:
-            interface.context_header("🧪 Test sequence")
+            interface.context_header("🧪 Linear test sequence")
             interface.context_key_value_point("Web-tests", len(self.web_tests))
             interface.context_key_value_point("Workers", self.n_workers)
             interface.context_separator()
@@ -142,13 +160,45 @@ class TestsRunner:
             await asyncio.gather(*workers)
         else:
             await self.__run_worker()
+                      
+    async def __execute_incremental_strategy(self) -> None:
+        interface.context_header("📈 Incremental tests")
+        interface.context_key_value_point("Goal load", self.n_workers)
+        interface.context_key_value_point("Tests per load", self.inc_test_per_load)
+        interface.context_separator()
+        strat_start = time.time()
+        
+        for load_n_workers in range(1, self.n_workers + 1):
+            interface.context_message_info(f"Running  {self.inc_test_per_load}  tests on load:  {load_n_workers}")
             
-    async def __run_single_webtest_sequence(self, silent: bool) -> None:
+            for n_test in range(self.inc_test_per_load):
+                workers = [asyncio.create_task(self.__run_single_webtest_sequence(silent=True, custom_load=load_n_workers)) for _ in range(load_n_workers)]
+                await asyncio.gather(*workers)
+                interface.context_message_info("-")
+
+            interface.context_separator()
+            
+        interface.context_finish(time.time() - strat_start)
+                
+                      
+    async def run(self) -> None:
+        if not self.__run_pretests():
+            return self.__report_result(False)
+        
+        match self.strategy:
+            case _TestsStrategy.LINEAR:
+                return await self.__execute_linear_strategy()
+            case _TestsStrategy.INCREMENTAL:
+                return await self.__execute_incremental_strategy()
+            
+    async def __run_single_webtest_sequence(self, silent: bool, custom_load: int = None) -> None:
         test_start_time = time.time()
         webtests_status = await self.__run_webtests(no_step_logs=silent)
         test_total_time = time.time() - test_start_time
 
-        self.__report_result(webtests_status, test_total_time)
+        if custom_load is None:
+            custom_load = self.n_workers
+        self.__report_result(webtests_status, test_total_time, custom_load)
         
         if not webtests_status and self.on_fail == "exit":
             exit()
@@ -164,10 +214,10 @@ class TestsRunner:
             if not self.loop:
                 return
             
-    def __report_result(self, result: bool, total_time: float = 0) -> None:
+    def __report_result(self, result: bool, total_time: float = 0, n_workers: int = 0) -> None:
         result = "pass" if result else "fail"
         try:
-            requests.get(f"http://localhost:8000/test-result/{result}/{total_time}/{self.n_workers}")
+            requests.get(f"http://localhost:8000/test-result/{result}/{total_time}/{n_workers}")
         except:
             observability.test_logger.critical(f"failed to report test result: {result} (API did not accept request)")
             exit()

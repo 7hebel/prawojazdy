@@ -33,6 +33,9 @@ def context_message_success(message: str) -> None:
 def context_message_error(message: str) -> None:
     print(f"{Fore.WHITE}│ {Fore.RED}{message}{Fore.RESET}")
 
+def context_message_info(message: str) -> None:
+    print(f"{Fore.WHITE}│ {Fore.WHITE}{message}{Fore.RESET}")
+
 
 def print_config(config: dict[str, str | int]) -> None:
     context_header("⚙️ Tests configuration")

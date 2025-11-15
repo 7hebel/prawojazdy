@@ -4,10 +4,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.resources import Resource
 from opentelemetry import trace
+from multiprocessing import Queue
 import logging_loki
 import logging
 import os
-
 
 class LogsEnrichment(logging.Filter):
     def filter(self, record):
@@ -41,13 +41,13 @@ class ColoredLogsFormatter(logging.Formatter):
 
 
 def __get_logger(name: str) -> logging.Logger:
-    loki_logs_handler = logging_loki.LokiHandler(
+    loki_logs_handler = logging_loki.LokiQueueHandler(
+        Queue(-1),
         url=os.getenv("LGTM_LOKI_API"),
         tags={"app": name},
         version="1",
     )
-    formatter = logging.Formatter('[%(name)s] %(asctime)s - %(levelname)s - %(message)s  trace_id=%(trace_id)s span_id=%(span_id)s')
-    loki_logs_handler.setFormatter(formatter)
+    loki_logs_handler.setFormatter(logging.Formatter('[%(name)s] %(asctime)s - %(levelname)s - %(message)s  trace_id=%(trace_id)s span_id=%(span_id)s'))
     
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
